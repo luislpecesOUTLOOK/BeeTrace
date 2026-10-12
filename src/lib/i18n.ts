@@ -38,7 +38,6 @@ const es = {
     { label: 'Cómo funciona', href: '#how-it-works' },
     { label: 'Para compradores', href: '#for-buyers' },
     { label: 'Escanear', href: '#escanear' },
-    { label: 'Precios', href: '#pricing' },
   ],
   header: { login: 'Entrar', langName: 'Español' },
   hero: {
@@ -150,33 +149,6 @@ const es = {
     openRecord: 'Abrir ficha del lote',
     foundBody: 'Lote encontrado en este dispositivo.',
     newBody: 'Identificador válido y nuevo.',
-  },
-  pricing: {
-    eyebrow: 'Precios',
-    title: 'Precio por lote, no por tarro.',
-    lede: 'Planes provisionales. Nombres, precios y límites aún por definir.',
-    per: '/ mes',
-    suggested: 'Recomendado',
-    plans: [
-      {
-        name: '[Plan 1]',
-        blurb: 'Para pocas colmenas y un puesto en el mercado.',
-        features: ['[N] lotes al año', 'QR para cada tarro', 'Páginas públicas de lote', 'Soporte por correo'],
-        cta: 'Elegir [Plan 1]',
-      },
-      {
-        name: '[Plan 2]',
-        blurb: 'Para colmenares que venden a tiendas.',
-        features: ['[N] lotes al año', 'Todo lo del [Plan 1]', 'Documentos de laboratorio en el lote', 'Plantillas de etiqueta'],
-        cta: 'Elegir [Plan 2]',
-      },
-      {
-        name: '[Plan 3]',
-        blurb: 'Para cooperativas y envasadoras con muchos proveedores.',
-        features: ['Lotes ilimitados', 'Todo lo del [Plan 2]', 'Varios apicultores, una cuenta', 'Soporte prioritario'],
-        cta: 'Hablar con nosotros',
-      },
-    ],
   },
   cta: {
     title: 'Dale un registro a tu próxima cosecha.',
@@ -362,7 +334,6 @@ export const content: Record<Lang, Dict> = {
       { label: 'How it works', href: '#how-it-works' },
       { label: 'For buyers', href: '#for-buyers' },
       { label: 'Scan', href: '#escanear' },
-      { label: 'Pricing', href: '#pricing' },
     ],
     header: { login: 'Sign in', langName: 'English' },
     hero: {
@@ -474,33 +445,6 @@ export const content: Record<Lang, Dict> = {
       openRecord: 'Open the lot record',
       foundBody: 'Lot found on this device.',
       newBody: 'Valid new identifier.',
-    },
-    pricing: {
-      eyebrow: 'Pricing',
-      title: 'Priced by the lot, not the jar.',
-      lede: 'Placeholder plans. Names, prices and limits are still to be set.',
-      per: '/ month',
-      suggested: 'Suggested',
-      plans: [
-        {
-          name: '[Plan 1]',
-          blurb: 'For a few hives and a market stall.',
-          features: ['[N] lots per year', 'QR codes for every jar', 'Public lot pages', 'Email support'],
-          cta: 'Choose [Plan 1]',
-        },
-        {
-          name: '[Plan 2]',
-          blurb: 'For apiaries selling to shops.',
-          features: ['[N] lots per year', 'Everything in [Plan 1]', 'Lab documents on lot pages', 'Label templates'],
-          cta: 'Choose [Plan 2]',
-        },
-        {
-          name: '[Plan 3]',
-          blurb: 'For co-ops and packers with many suppliers.',
-          features: ['Unlimited lots', 'Everything in [Plan 2]', 'Several beekeepers, one account', 'Priority support'],
-          cta: 'Talk to us',
-        },
-      ],
     },
     cta: {
       title: 'Give your next harvest a record.',

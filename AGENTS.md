@@ -12,7 +12,7 @@ Astro 7 static marketing site (BeeTrace hero/landing). No tests, linter, CI, or 
 
 ## Structure
 
-- `src/pages/` — landing + app in two static trees (see below); landing section order: `Header, Hero, HowItWorks, ForBuyers, ScanSection, Pricing, ClosingCta, Footer`.
+- `src/pages/` — landing + app in two static trees (see below); landing section order: `Header, Hero, HowItWorks, ForBuyers, ScanSection, ClosingCta, Footer`. No pricing: the landing targets beekeepers selling to packers and packers managing intake lots.
 - `src/layouts/Base.astro` — global tokens (`--ink/--card/--cream/--muted/--faint/--accent/--ok`, `--display`, `--mono`), body comb/glow background (`public/comb.svg` + radial gradient), skip link, self-hosted fonts via `@fontsource-variable/bricolage-grotesque` + `@fontsource/jetbrains-mono` (imported in frontmatter, not CDN).
 - `src/components/` — one `.astro` file per section; `LotCard.astro` (props: `lot`, `fields[]`, `steps[]`), small primitives (`Hex`, `Check`, `Brand`, `SectionIntro`); `nav.ts` exports `sections(lang)` + `home(lang)` used by `Header`/`Footer` — add nav labels in `src/lib/i18n.ts`, keep anchor `href`s in sync with section `id`s.
 - `src/lib/i18n.ts` — central ES/EN dict (`content.es` is the shape; `en` must match it or the build fails typecheck-by-shape). Helpers: `prefix`, `counterpart`, `docLang`. Landing components take `lang` prop; client scripts read locale from `document.documentElement.lang`.
