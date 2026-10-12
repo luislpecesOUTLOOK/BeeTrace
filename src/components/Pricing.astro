@@ -1,0 +1,210 @@
+---
+import Check from './Check.astro';
+import SectionIntro from './SectionIntro.astro';
+
+// Placeholder plans: names, prices and limits are not set yet.
+const plans = [
+  {
+    name: '[Plan 1]',
+    blurb: 'For a few hives and a market stall.',
+    features: ['[N] lots per year', 'QR codes for every jar', 'Public lot pages', 'Email support'],
+    cta: 'Choose [Plan 1]',
+  },
+  {
+    name: '[Plan 2]',
+    blurb: 'For apiaries selling to shops.',
+    features: ['[N] lots per year', 'Everything in [Plan 1]', 'Lab documents on lot pages', 'Label templates'],
+    cta: 'Choose [Plan 2]',
+    featured: true,
+  },
+  {
+    name: '[Plan 3]',
+    blurb: 'For co-ops and packers with many suppliers.',
+    features: ['Unlimited lots', 'Everything in [Plan 2]', 'Several beekeepers, one account', 'Priority support'],
+    cta: 'Talk to us',
+  },
+];
+---
+
+<section id="pricing" aria-labelledby="pricing-title">
+  <div class="head">
+    <SectionIntro eyebrow="Pricing" id="pricing-title" align="center">
+      Priced by the lot, not the jar.
+    </SectionIntro>
+    <p>Placeholder plans. Names, prices and limits are still to be set.</p>
+  </div>
+  <div class="plans">
+    {
+      plans.map((plan) => (
+        <article class:list={['plan', { featured: plan.featured }]}>
+          <div class="plan-top">
+            <h3>{plan.name}</h3>
+            {plan.featured && <span class="tag">Suggested</span>}
+          </div>
+          <p class="price">
+            <span class="amount">[PRICE]</span>
+            <span class="per">/ month</span>
+          </p>
+          <p class="blurb">{plan.blurb}</p>
+          <ul>
+            {plan.features.map((feature) => (
+              <li>
+                <Check size={18} />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+          <a class="cta" href="#">
+            {plan.cta}
+          </a>
+        </article>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  section {
+    background: var(--ink);
+    padding: 120px 5%;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    text-align: center;
+  }
+
+  .head > p {
+    margin: 0;
+    max-width: 34em;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .plan {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 32px;
+    border-radius: 20px;
+    background: var(--card);
+    border: 1px solid var(--line);
+  }
+
+  .featured {
+    background: #241d13;
+    border-color: var(--accent);
+  }
+
+  .plan-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+
+  .tag {
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .price {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .amount {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .per {
+    font-size: 15px;
+    color: var(--faint);
+  }
+
+  .blurb {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 20px 0 0;
+    border-top: 1px solid rgba(245, 239, 227, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  li :global(svg) {
+    flex: none;
+    margin-top: 2px;
+    color: var(--accent);
+  }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 0 24px;
+    border-radius: 999px;
+    border: 1px solid rgba(245, 239, 227, 0.35);
+    font-weight: 700;
+    font-size: 16px;
+    text-decoration: none;
+  }
+
+  .featured .cta {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .featured .cta:hover {
+    filter: brightness(1.08);
+  }
+</style>

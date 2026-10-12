@@ -1,0 +1,76 @@
+<section aria-labelledby="cta-title">
+  <div class="band">
+    <div class="copy">
+      <h2 id="cta-title">Give your next harvest a record.</h2>
+      <p>Register a lot in a few minutes. Buyers can check it as soon as it is saved.</p>
+    </div>
+    <a href="#pricing">
+      Register your first lot
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+    </a>
+  </div>
+</section>
+
+<style>
+  section {
+    background: var(--ink);
+    padding: 0 5% 96px;
+  }
+
+  .band {
+    padding: 72px 6%;
+    border-radius: 28px;
+    background: var(--accent);
+    color: var(--ink);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px 48px;
+  }
+
+  .copy {
+    flex: 1 1 520px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(34px, 4vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+    max-width: 30em;
+    font-size: 18px;
+    line-height: 1.5;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+    padding: 0 30px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--cream);
+    font-weight: 700;
+    font-size: 17px;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--accent);
+  }
+
+  a:focus-visible {
+    outline-color: var(--ink);
+  }
+</style>

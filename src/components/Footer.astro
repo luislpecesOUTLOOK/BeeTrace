@@ -1,0 +1,42 @@
+---
+import Brand from './Brand.astro';
+import { sections } from './nav';
+---
+
+<footer>
+  <Brand size="sm" />
+  <nav aria-label="Footer">
+    {sections.map((link) => <a href={link.href}>{link.label}</a>)}
+  </nav>
+  <p>© 2026 BeeTrace</p>
+</footer>
+
+<style>
+  footer {
+    background: var(--ink);
+    padding: 40px 5% 56px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 32px;
+    font-size: 15px;
+    color: var(--faint);
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+  }
+
+  nav a {
+    text-decoration: none;
+    padding: 10px 0;
+  }
+
+  p {
+    margin: 0;
+  }
+</style>

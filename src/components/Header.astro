@@ -1,0 +1,43 @@
+---
+import Brand from './Brand.astro';
+import { sections } from './nav';
+---
+
+<header>
+  <Brand />
+  <nav aria-label="Main">
+    {sections.map((link) => <a href={link.href}>{link.label}</a>)}
+    <a class="signin" href="#">Sign in</a>
+  </nav>
+</header>
+
+<style>
+  header {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 32px;
+    padding: 28px 5%;
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 28px;
+    font-size: 16px;
+  }
+
+  nav a {
+    text-decoration: none;
+    padding: 10px 0;
+  }
+
+  nav .signin {
+    padding: 10px 18px;
+    border: 1px solid rgba(245, 239, 227, 0.28);
+    border-radius: 999px;
+  }
+</style>

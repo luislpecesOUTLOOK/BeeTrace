@@ -1,0 +1,179 @@
+---
+import Hex from './Hex.astro';
+
+interface Step {
+  label: string;
+  date: string;
+}
+
+interface Props {
+  lot: string;
+  fields: { label: string; value: string }[];
+  steps: Step[];
+}
+
+const { lot, fields, steps } = Astro.props;
+---
+
+<article aria-label={`Lot ${lot}`}>
+  <div class="top">
+    <div class="lot">LOT {lot}</div>
+    <div class="badge">
+      <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"></path></svg>
+      Verified
+    </div>
+  </div>
+
+  <dl>
+    {
+      fields.map((field) => (
+        <div>
+          <dt>{field.label}</dt>
+          <dd>{field.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <ol>
+    {
+      steps.map((step) => (
+        <li>
+          <Hex />
+          <span class="label">{step.label}</span>
+          <span class="date">{step.date}</span>
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="qr-row">
+    <div class="qr" aria-hidden="true">QR</div>
+    <p>Printed on every jar. Buyers scan it to see this record.</p>
+  </div>
+</article>
+
+<style>
+  article {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid rgba(242, 168, 29, 0.28);
+    border-radius: 20px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .lot {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(120, 200, 120, 0.14);
+    color: var(--ok);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+  }
+
+  dl div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  dt {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 18px 0 0;
+    border-top: 1px solid rgba(245, 239, 227, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--accent);
+  }
+
+  .label {
+    flex: 1;
+    font-size: 16px;
+    color: var(--cream);
+  }
+
+  .date {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--faint);
+  }
+
+  .qr-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(245, 239, 227, 0.05);
+  }
+
+  .qr {
+    width: 64px;
+    height: 64px;
+    flex: none;
+    border-radius: 8px;
+    border: 1.5px dashed rgba(245, 239, 227, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+  }
+
+  .qr-row p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+</style>

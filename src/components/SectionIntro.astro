@@ -1,0 +1,44 @@
+---
+interface Props {
+  eyebrow: string;
+  id: string;
+  align?: 'start' | 'center';
+}
+
+const { eyebrow, id, align = 'start' } = Astro.props;
+---
+
+<div class:list={['intro', align]}>
+  <p class="eyebrow">{eyebrow}</p>
+  <h2 id={id}><slot /></h2>
+</div>
+
+<style>
+  .intro {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .center {
+    align-items: center;
+    text-align: center;
+  }
+
+  .eyebrow {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(36px, 4.4vw, 64px);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+
+interface Props {
+  size?: 'md' | 'sm';
+}
+
+const { size = 'md' } = Astro.props;
+const dims = size === 'md' ? 34 : 28;
+---
+
+<a class:list={['brand', size]} href="/">
+  <img class="mark" src="/logo.png" alt="BeeTrace logo" width={dims} height={dims} />
+  BeeTrace
+</a>
+
+<style>
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--cream);
+  }
+
+  .md {
+    font-size: 22px;
+  }
+
+  .sm {
+    font-size: 18px;
+  }
+
+  .mark {
+    width: 34px;
+    height: 34px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex: none;
+  }
+
+  .sm .mark {
+    width: 28px;
+    height: 28px;
+  }
+</style>

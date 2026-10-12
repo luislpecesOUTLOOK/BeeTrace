@@ -1,0 +1,24 @@
+---
+interface Props {
+  variant?: 'filled' | 'outline' | 'check';
+  size?: number;
+  strokeWidth?: number;
+}
+
+const { variant = 'filled', size = 22, strokeWidth = 2.4 } = Astro.props;
+const filled = variant === 'filled';
+---
+
+<svg
+  aria-hidden="true"
+  width={size}
+  height={size}
+  viewBox="0 0 30 30"
+  fill={filled ? 'currentColor' : 'none'}
+  stroke={filled ? 'none' : 'currentColor'}
+  stroke-width={strokeWidth}
+  stroke-linejoin="round"
+>
+  <path d="M15 2.5 26 8.8v12.4L15 27.5 4 21.2V8.8Z"></path>
+  {variant === 'check' && <path d="m10 15 3.5 3.5L20 12"></path>}
+</svg>

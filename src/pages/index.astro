@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import ClosingCta from '../components/ClosingCta.astro';
+import Footer from '../components/Footer.astro';
+import ForBuyers from '../components/ForBuyers.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import Pricing from '../components/Pricing.astro';
+---
+
+<Base
+  title="BeeTrace — Every jar, traced back to the hive"
+  description="Lot traceability for beekeepers: log each harvest as a lot, attach what proves it, and hand buyers a code they can check in seconds."
+>
+  <Header />
+  <main id="main" tabindex="-1">
+    <Hero />
+    <HowItWorks />
+    <ForBuyers />
+    <Pricing />
+    <ClosingCta />
+  </main>
+  <Footer />
+</Base>
