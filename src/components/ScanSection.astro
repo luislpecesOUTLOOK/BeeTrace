@@ -1,0 +1,443 @@
+---
+---
+
+<section class="scan" id="escanear" aria-labelledby="scan-title">
+  <div class="head">
+    <p class="eyebrow">Trazabilidad en el móvil</p>
+    <h2 id="scan-title">Escanea y registra tu lote</h2>
+    <p class="lede">
+      Apunta con la cámara al QR del bidón o del lote. Si el lote existe y tienes
+      permiso, verás su ficha; si es nuevo, podrás registrarlo.
+    </p>
+  </div>
+
+  <div class="access" role="list">
+    <a class="card" role="listitem" href="/app/?rol=apicultor">
+      <strong>Acceso para apicultores</strong>
+      <span>Crea lotes, genera sus QR e imprímelos para los bidones.</span>
+    </a>
+    <a class="card" role="listitem" href="/app/?rol=envasadora">
+      <strong>Acceso para envasadoras</strong>
+      <span>Recibe lotes, registra análisis y crea mezclas trazables.</span>
+    </a>
+  </div>
+
+  <div class="panel">
+    <div class="actions">
+      <button type="button" class="primary" id="scan-open">Abrir cámara</button>
+      <label class="file">
+        Leer QR desde imagen
+        <input type="file" id="scan-file" accept="image/*" hidden />
+      </label>
+    </div>
+
+    <div class="reader" id="scan-reader" hidden>
+      <div class="frame">
+        <video id="scan-video" muted playsinline></video>
+        <span class="guide" aria-hidden="true"></span>
+      </div>
+      <canvas id="scan-canvas" hidden></canvas>
+      <div class="reader-actions">
+        <button type="button" id="scan-switch" hidden>Cambiar cámara</button>
+        <button type="button" id="scan-close">Cerrar escáner</button>
+      </div>
+    </div>
+
+    <p class="status" id="scan-status" role="status"></p>
+
+    <form class="manual" id="scan-manual">
+      <label for="scan-input">O introduce el identificador a mano</label>
+      <div class="row">
+        <input
+          id="scan-input"
+          name="lote"
+          inputmode="text"
+          autocomplete="off"
+          placeholder="BT-26-0412"
+        />
+        <button type="submit" class="secondary">Consultar</button>
+      </div>
+    </form>
+
+    <div class="result" id="scan-result" hidden></div>
+  </div>
+</section>
+
+<script>
+  import { QrScanner, decodeImageFile, type ScanState } from '../lib/scanner';
+  import { parseScannedText } from '../lib/trace';
+  import { getLot, getProfile, setPendingScan } from '../lib/store';
+
+  const reader = document.getElementById('scan-reader') as HTMLElement;
+  const video = document.getElementById('scan-video') as HTMLVideoElement;
+  const canvas = document.getElementById('scan-canvas') as HTMLCanvasElement;
+  const status = document.getElementById('scan-status') as HTMLElement;
+  const result = document.getElementById('scan-result') as HTMLElement;
+  const openBtn = document.getElementById('scan-open') as HTMLButtonElement;
+  const closeBtn = document.getElementById('scan-close') as HTMLButtonElement;
+  const switchBtn = document.getElementById('scan-switch') as HTMLButtonElement;
+  const fileInput = document.getElementById('scan-file') as HTMLInputElement;
+  const manual = document.getElementById('scan-manual') as HTMLFormElement;
+  const manualInput = document.getElementById('scan-input') as HTMLInputElement;
+
+  const STATE_TEXT: Record<ScanState, string> = {
+    idle: '',
+    starting: 'Abriendo cámara…',
+    scanning: 'Apunta al QR dentro del marco.',
+    denied:
+      'Permiso de cámara denegado. Actívalo en los ajustes del navegador o introduce el identificador a mano.',
+    'no-camera': 'No hay cámara disponible. Introduce el identificador a mano o sube una imagen.',
+    unsupported: 'Este dispositivo o navegador no admite la cámara. Usa la introducción manual.',
+    insecure: 'La cámara necesita HTTPS. Introduce el identificador a mano o sube una imagen.',
+  };
+
+  const scanner = new QrScanner(video, canvas, {
+    onText: (text) => handleText(text, true),
+    onState: (state, detail) => {
+      status.textContent = detail ?? STATE_TEXT[state] ?? '';
+      switchBtn.hidden = !scanner.canSwitch();
+    },
+  });
+
+  function closeReader(): void {
+    scanner.stop();
+    reader.hidden = true;
+    openBtn.textContent = 'Abrir cámara';
+  }
+
+  openBtn.addEventListener('click', async () => {
+    result.hidden = true;
+    if (scanner.active) {
+      closeReader();
+      return;
+    }
+    reader.hidden = false;
+    openBtn.textContent = 'Cerrar';
+    await scanner.start();
+  });
+
+  closeBtn.addEventListener('click', closeReader);
+  switchBtn.addEventListener('click', () => scanner.switchCamera());
+
+  // Stop the camera when leaving the screen or hiding the tab.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) closeReader();
+  });
+  window.addEventListener('pagehide', () => scanner.stop());
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    status.textContent = 'Leyendo imagen…';
+    try {
+      const text = await decodeImageFile(file);
+      if (text) handleText(text, false);
+      else {
+        status.textContent = 'No se encontró ningún QR en esa imagen.';
+        showResult(false, 'Sin QR legible', 'La imagen no contiene un código QR válido.');
+      }
+    } catch {
+      status.textContent = 'No se pudo leer esa imagen.';
+    }
+  });
+
+  manual.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleText(manualInput.value, false);
+  });
+
+  function handleText(raw: string, fromCamera: boolean): void {
+    const parsed = parseScannedText(raw);
+    if (!parsed.ok) {
+      status.textContent =
+        parsed.reason === 'empty'
+          ? 'Introduce un identificador.'
+          : 'Ese código no es un QR de BeeTrace. No se abrió ningún enlace externo.';
+      showResult(false, 'Código no válido', 'Comprueba el identificador o pide un QR de BeeTrace.');
+      return;
+    }
+    const lotId = parsed.lotId;
+    if (fromCamera) {
+      scanner.stop();
+      reader.hidden = true;
+      openBtn.textContent = 'Abrir cámara';
+    }
+    const lot = getLot(lotId);
+    const profile = getProfile();
+    if (!profile) {
+      // Keep the identifier and resume the flow after access, checking permissions there.
+      setPendingScan(lotId);
+      status.textContent = `Lote ${lotId} detectado. Entra para continuar.`;
+      showResult(
+        true,
+        `Lote ${lotId}`,
+        lot
+          ? 'Existe en este dispositivo. Entra como apicultor o envasadora para ver su ficha.'
+          : 'Identificador válido y nuevo. Entra como apicultor para crearlo.',
+        [{ href: '/app/', label: 'Entrar para continuar' }],
+      );
+      return;
+    }
+    status.textContent = `Lote ${lotId} detectado.`;
+    showResult(
+      true,
+      `Lote ${lotId}`,
+      lot ? 'Lote encontrado en este dispositivo.' : 'Identificador válido y nuevo.',
+      [{ href: `/app/lote?id=${encodeURIComponent(lotId)}`, label: 'Abrir ficha del lote' }],
+    );
+  }
+
+  function showResult(
+    ok: boolean,
+    title: string,
+    body: string,
+    links: { href: string; label: string }[] = [],
+  ): void {
+    result.hidden = false;
+    result.dataset.ok = String(ok);
+    result.innerHTML = '';
+    const h = document.createElement('p');
+    h.className = 'result-title';
+    h.textContent = title;
+    const p = document.createElement('p');
+    p.textContent = body;
+    result.append(h, p);
+    for (const l of links) {
+      const a = document.createElement('a');
+      a.href = l.href;
+      a.textContent = l.label;
+      a.className = 'secondary';
+      result.append(a);
+    }
+    result.scrollIntoView({ block: 'nearest' });
+  }
+</script>
+
+<style>
+  .scan {
+    padding: 88px 5%;
+    background: var(--band);
+    border-top: 1px solid var(--line);
+  }
+
+  .head {
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .eyebrow {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(32px, 4vw, 52px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .lede {
+    margin: 0;
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1.5;
+  }
+
+  .access {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin: 32px 0;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    text-decoration: none;
+  }
+
+  .card strong {
+    font-size: 18px;
+  }
+
+  .card span {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .panel {
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--ink);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .primary {
+    min-height: 52px;
+    padding: 0 26px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 17px;
+    cursor: pointer;
+  }
+
+  .file {
+    display: inline-flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 26px;
+    border: 1px solid rgba(245, 239, 227, 0.35);
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .reader {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .frame {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 4 / 3;
+  }
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .guide {
+    position: absolute;
+    inset: 18%;
+    border: 3px solid var(--accent);
+    border-radius: 14px;
+    pointer-events: none;
+  }
+
+  .reader-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .reader-actions button {
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 999px;
+    border: 1px solid rgba(245, 239, 227, 0.35);
+    background: transparent;
+    color: var(--cream);
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .status {
+    margin: 0;
+    min-height: 24px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .manual {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .manual label {
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .row {
+    display: flex;
+    gap: 10px;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    min-height: 52px;
+    padding: 0 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(245, 239, 227, 0.25);
+    background: var(--card);
+    color: var(--cream);
+    font-size: 17px;
+    font-family: var(--mono);
+  }
+
+  .secondary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 22px;
+    border-radius: 999px;
+    border: 1px solid rgba(245, 239, 227, 0.35);
+    color: var(--cream);
+    text-decoration: none;
+    font-weight: 600;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .result {
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .result[data-ok='true'] {
+    border-color: rgba(155, 224, 155, 0.5);
+  }
+
+  .result-title {
+    margin: 0;
+    font-weight: 800;
+    font-size: 18px;
+  }
+
+  .result p {
+    margin: 0;
+    color: var(--muted);
+  }
+</style>

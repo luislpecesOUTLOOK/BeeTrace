@@ -1,0 +1,319 @@
+---
+import App from '../../layouts/App.astro';
+---
+
+<App title="Apicultor · BeeTrace">
+  <div class="who">
+    <h1>Mis lotes</h1>
+    <p id="who-line" class="who-line"></p>
+    <div class="who-actions">
+      <a class="ghost" href="/#escanear">Escanear QR</a>
+      <button class="ghost" id="btn-out" type="button">Salir</button>
+    </div>
+  </div>
+
+  <ul class="card-list" id="lot-list"></ul>
+
+  <h2>Crear lote de origen</h2>
+  <p class="hint" id="create-hint">
+    Cada lote tiene un identificador único. Si escaneaste un código nuevo, ya viene
+    rellenado. Revisa los datos y pulsa <strong>Confirmar registro</strong>.
+  </p>
+  <form id="lot-form">
+    <label>
+      Identificador del lote
+      <input id="f-id" placeholder="BT-26-0413" />
+    </label>
+    <label>
+      Apicultor
+      <input id="f-beekeeper" required />
+    </label>
+    <label>
+      Explotación o colmenar
+      <input id="f-farm" required />
+    </label>
+    <div class="grid">
+      <label>
+        País de recolección
+        <input id="f-country" required placeholder="España" />
+      </label>
+      <label>
+        Ubicación
+        <input id="f-location" required placeholder="La Alcarria, Guadalajara" />
+      </label>
+    </div>
+    <div class="grid">
+      <label>
+        Fecha de cosecha
+        <input id="f-harvest" type="date" required />
+      </label>
+      <label>
+        Fecha de extracción
+        <input id="f-extraction" type="date" required />
+      </label>
+    </div>
+    <div class="grid">
+      <label>
+        Tipo de miel declarado
+        <input id="f-type" required placeholder="Romero" />
+      </label>
+      <label>
+        Cantidad total (kg)
+        <input id="f-kg" type="number" min="0.1" step="0.1" required placeholder="240" />
+      </label>
+    </div>
+
+    <fieldset>
+      <legend>Bidones (identificador y peso)</legend>
+      <div id="drums"></div>
+      <button class="ghost" id="btn-drum" type="button">Añadir bidón</button>
+      <p class="hint" id="drums-hint"></p>
+    </fieldset>
+
+    <label>
+      Documentación y análisis (uno por línea)
+      <textarea id="f-docs" placeholder="Análisis de humedad&#10;Foto del colmenar"></textarea>
+    </label>
+    <div class="grid">
+      <label>
+        Empresa destinataria
+        <input id="f-dest" placeholder="Mieles del Sur S.L." />
+      </label>
+      <label>
+        Fecha de envío
+        <input id="f-ship" type="date" />
+      </label>
+    </div>
+    <button class="primary" id="btn-save" type="submit">Confirmar registro</button>
+  </form>
+
+  <h2>Historial</h2>
+  <ul class="card-list" id="mov-list"></ul>
+</App>
+
+<script>
+  import {
+    createLot,
+    getProfile,
+    listLots,
+    listMovements,
+    type Profile,
+  } from '../../lib/store';
+  import { drumsMatchTotal, isValidDrumId } from '../../lib/trace';
+  import { flash, num, requireProfile, signOut, today, val, field } from '../../lib/app-ui';
+
+  const profile = requireProfile('apicultor') as Profile | null;
+  if (profile) {
+    field('who-line').textContent = `${profile.name} · ${profile.org}`;
+    (document.getElementById('f-beekeeper') as HTMLInputElement).value = profile.name;
+    (document.getElementById('f-farm') as HTMLInputElement).value = profile.org;
+    (document.getElementById('f-harvest') as HTMLInputElement).value = today();
+    (document.getElementById('f-extraction') as HTMLInputElement).value = today();
+
+    const params = new URLSearchParams(location.search);
+    const preset = params.get('crear') ?? params.get('id');
+    if (preset) {
+      (document.getElementById('f-id') as HTMLInputElement).value = preset.toUpperCase();
+      field('create-hint').innerHTML =
+        `Vas a registrar el identificador <strong>${preset.toUpperCase()}</strong> que acabas de escanear. Revisa los datos y confirma.`;
+    }
+
+    renderLots();
+    renderMovements();
+  }
+
+  field('btn-out').addEventListener('click', signOut);
+
+  function renderLots(): void {
+    const ul = field('lot-list');
+    ul.innerHTML = '';
+    const lots = listLots();
+    if (lots.length === 0) {
+      ul.innerHTML = '<li class="lot-card"><span>Todavía no hay lotes. Crea el primero abajo.</span></li>';
+      return;
+    }
+    for (const l of lots) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.className = 'lot-card';
+      a.href = `/app/lote?id=${encodeURIComponent(l.id)}`;
+      const demo = l.demo ? ' <span class="demo-tag">· demo</span>' : '';
+      a.innerHTML =
+        `<strong>${l.id}</strong><span>${l.honeyType} · ${l.totalKg} kg · ${l.farm}${demo}</span>` +
+        `<span class="pill">${l.kind === 'mezcla' ? 'mezcla' : 'origen'} · ${l.receptionStatus}</span>`;
+      li.append(a);
+      ul.append(li);
+    }
+  }
+
+  function renderMovements(): void {
+    const ul = field('mov-list');
+    ul.innerHTML = '';
+    for (const m of listMovements(20)) {
+      const li = document.createElement('li');
+      li.className = 'lot-card';
+      li.innerHTML =
+        `<strong>${m.action}</strong><span>${m.actor} · ${new Date(m.at).toLocaleString('es')}</span><span>${m.detail}</span>`;
+      ul.append(li);
+    }
+  }
+
+  interface DrumRow {
+    id: HTMLInputElement;
+    kg: HTMLInputElement;
+  }
+  const rows: DrumRow[] = [];
+
+  function addDrum(id = '', kg = ''): void {
+    const wrap = document.createElement('div');
+    wrap.className = 'drum-row';
+    wrap.innerHTML =
+      '<input placeholder="BID-0413-01" aria-label="Identificador del bidón" />' +
+      '<input type="number" min="0.1" step="0.1" placeholder="kg" aria-label="Peso en kilos" />' +
+      '<button type="button" aria-label="Quitar bidón">✕</button>';
+    const [idEl, kgEl] = [...wrap.querySelectorAll('input')] as HTMLInputElement[];
+    idEl.value = id;
+    kgEl.value = kg;
+    const row = { id: idEl, kg: kgEl };
+    rows.push(row);
+    wrap.querySelector('button')?.addEventListener('click', () => {
+      wrap.remove();
+      rows.splice(rows.indexOf(row), 1);
+      syncDrumsHint();
+    });
+    kgEl.addEventListener('input', syncDrumsHint);
+    field('drums').append(wrap);
+    syncDrumsHint();
+  }
+
+  function syncDrumsHint(): void {
+    const total = num('f-kg');
+    const sum = rows.reduce((a, r) => a + (Number(r.kg.value.replace(',', '.')) || 0), 0);
+    field('drums-hint').textContent =
+      rows.length === 0
+        ? 'Añade al menos un bidón con su peso.'
+        : `Suma de bidones: ${Math.round(sum * 100) / 100} kg / total: ${total || 0} kg.`;
+  }
+
+  field('f-kg').addEventListener('input', syncDrumsHint);
+  field('btn-drum').addEventListener('click', () => addDrum());
+  addDrum();
+
+  field('lot-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!profile) return;
+    const btn = field<HTMLButtonElement>('btn-save');
+    btn.disabled = true;
+    try {
+      const totalKg = num('f-kg');
+      if (!(totalKg > 0)) throw new Error('Indica la cantidad total en kilos.');
+      const drums = rows
+        .filter((r) => r.id.value.trim() || r.kg.value.trim())
+        .map((r) => ({
+          id: r.id.value.trim(),
+          weightKg: Number(r.kg.value.replace(',', '.')),
+        }));
+      if (drums.length === 0) throw new Error('Añade al menos un bidón.');
+      for (const d of drums) {
+        if (!isValidDrumId(d.id)) throw new Error(`Identificador de bidón no válido: ${d.id}.`);
+        if (!(d.weightKg > 0)) throw new Error(`Peso no válido en el bidón ${d.id}.`);
+      }
+      const seen = new Set(drums.map((d) => d.id));
+      if (seen.size !== drums.length) throw new Error('Hay bidones con identificador repetido.');
+      if (!drumsMatchTotal(drums, totalKg)) {
+        throw new Error('La suma de los bidones no coincide con la cantidad total.');
+      }
+      const rawId = val('f-id');
+      const docs = val('f-docs')
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((name) => ({ name }));
+      const lot = createLot(
+        {
+          id: rawId || undefined,
+          beekeeper: val('f-beekeeper'),
+          farm: val('f-farm'),
+          country: val('f-country'),
+          location: val('f-location'),
+          harvestDate: val('f-harvest'),
+          extractionDate: val('f-extraction'),
+          honeyType: val('f-type'),
+          totalKg,
+          drums,
+          docs,
+          destCompany: val('f-dest'),
+          shipDate: val('f-ship'),
+        },
+        profile,
+      );
+      flash('ok', `Lote ${lot.id} guardado. Ya puedes generar e imprimir su QR.`);
+      location.href = `/app/lote?id=${encodeURIComponent(lot.id)}`;
+    } catch (err) {
+      flash('error', err instanceof Error ? err.message : 'No se pudo guardar el lote.');
+      btn.disabled = false;
+    }
+  });
+
+</script>
+
+<style>
+  .who-line {
+    color: var(--muted);
+    margin: 4px 0 12px;
+  }
+
+  .who-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .hint {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 520px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  fieldset {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  legend {
+    padding: 0 8px;
+    color: var(--muted);
+  }
+
+  .drum-row {
+    display: grid;
+    grid-template-columns: 1fr 110px 52px;
+    gap: 8px;
+  }
+
+  .drum-row button {
+    min-height: 52px;
+    border-radius: 12px;
+    border: 1px solid rgba(245, 239, 227, 0.25);
+    background: transparent;
+    color: var(--cream);
+    cursor: pointer;
+    font-size: 18px;
+  }
+</style>

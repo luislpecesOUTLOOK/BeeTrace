@@ -1,0 +1,225 @@
+---
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<Base title={title} description="Zona privada de BeeTrace: lotes, recepciones, mezclas y análisis.">
+  <div class="app">
+    <header class="top">
+      <a class="back" href="/">← BeeTrace</a>
+      <span class="env">Modo local · sin servidor</span>
+    </header>
+    <p class="notice" role="note">
+      Estás en una <strong>vista previa local</strong>: los datos se guardan en este
+      dispositivo y no hay autenticación real. Nada de lo que veas aquí es una
+      certificación oficial.
+    </p>
+    <main>
+      <slot />
+    </main>
+  </div>
+</Base>
+
+<style>
+  .app {
+    min-height: 100svh;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 16px 16px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .back {
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 17px;
+  }
+
+  .env {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--faint);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+
+  .notice {
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(242, 168, 29, 0.1);
+    border: 1px solid rgba(242, 168, 29, 0.35);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .notice strong {
+    color: var(--cream);
+  }
+</style>
+
+<style is:global>
+  .app h1 {
+    margin: 0;
+    font-size: clamp(28px, 6vw, 40px);
+    letter-spacing: -0.03em;
+  }
+
+  .app h2 {
+    margin: 24px 0 8px;
+    font-size: 22px;
+  }
+
+  .app form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .app label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .app input,
+  .app select,
+  .app textarea {
+    min-height: 52px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(245, 239, 227, 0.25);
+    background: var(--card);
+    color: var(--cream);
+    font-size: 17px;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .app textarea {
+    min-height: 88px;
+    resize: vertical;
+  }
+
+  .app button.primary,
+  .app a.primary {
+    min-height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 26px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 17px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .app button.primary:disabled {
+    opacity: 0.55;
+    cursor: wait;
+  }
+
+  .app button.ghost,
+  .app a.ghost {
+    min-height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 22px;
+    border-radius: 999px;
+    border: 1px solid rgba(245, 239, 227, 0.35);
+    color: var(--cream);
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: none;
+  }
+
+  .app .flash {
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .app .flash[data-kind='ok'] {
+    background: rgba(155, 224, 155, 0.12);
+    border: 1px solid rgba(155, 224, 155, 0.5);
+  }
+
+  .app .flash[data-kind='error'] {
+    background: rgba(224, 120, 120, 0.1);
+    border: 1px solid rgba(224, 120, 120, 0.5);
+  }
+
+  .app .card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .app .lot-card {
+    display: block;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    text-decoration: none;
+  }
+
+  .app .lot-card strong {
+    font-size: 18px;
+    font-family: var(--mono);
+  }
+
+  .app .lot-card span {
+    display: block;
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  .app .pill {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    background: rgba(245, 239, 227, 0.08);
+    color: var(--muted);
+  }
+
+  .app .demo-tag {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+  }
+</style>
