@@ -2,13 +2,14 @@
 
 interface Props {
   size?: 'md' | 'sm';
+  home?: string;
 }
 
-const { size = 'md' } = Astro.props;
+const { size = 'md', home = '/' } = Astro.props;
 const dims = size === 'md' ? 34 : 28;
 ---
 
-<a class:list={['brand', size]} href="/">
+<a class:list={['brand', size]} href={home}>
   <img class="mark" src="/logo.png" alt="BeeTrace logo" width={dims} height={dims} />
   BeeTrace
 </a>

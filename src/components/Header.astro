@@ -1,13 +1,25 @@
 ---
 import Brand from './Brand.astro';
-import { sections } from './nav';
+import { home, sections } from './nav';
+import { content, counterpart, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'es' } = Astro.props;
+const c = content[lang];
+const other: Lang = lang === 'en' ? 'es' : 'en';
 ---
 
 <header>
-  <Brand />
+  <Brand home={home(lang)} />
   <nav aria-label="Main">
-    {sections.map((link) => <a href={link.href}>{link.label}</a>)}
-    <a class="signin" href="/app/">Entrar</a>
+    {sections(lang).map((link) => <a href={link.href}>{link.label}</a>)}
+    <a class="lang" href={counterpart('/', '', lang)} hreflang={other} aria-label={c.header.langName}>
+      {other === 'es' ? 'ES' : 'EN'}
+    </a>
+    <a class="signin" href={`${home(lang)}app/`}>{c.header.login}</a>
   </nav>
 </header>
 
@@ -38,6 +50,16 @@ import { sections } from './nav';
   nav .signin {
     padding: 10px 18px;
     border: 1px solid rgba(245, 239, 227, 0.28);
+    border-radius: 999px;
+  }
+
+  nav .lang {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
     border-radius: 999px;
   }
 </style>

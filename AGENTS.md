@@ -12,11 +12,12 @@ Astro 7 static marketing site (BeeTrace hero/landing). No tests, linter, CI, or 
 
 ## Structure
 
-- `src/pages/index.astro` — sole page; section order: `Header, Hero, HowItWorks, ForBuyers, Pricing, ClosingCta, Footer`.
+- `src/pages/` — landing + app in two static trees (see below); landing section order: `Header, Hero, HowItWorks, ForBuyers, ScanSection, Pricing, ClosingCta, Footer`.
 - `src/layouts/Base.astro` — global tokens (`--ink/--card/--cream/--muted/--faint/--accent/--ok`, `--display`, `--mono`), body comb/glow background (`public/comb.svg` + radial gradient), skip link, self-hosted fonts via `@fontsource-variable/bricolage-grotesque` + `@fontsource/jetbrains-mono` (imported in frontmatter, not CDN).
-- `src/components/` — one `.astro` file per section; `LotCard.astro` (props: `lot`, `fields[]`, `steps[]`), small primitives (`Hex`, `Check`, `Brand`, `SectionIntro`); `nav.ts` exports shared `sections` array used by `Header` — add nav links there, keep anchor `href`s in sync with section `id`s.
-- `src/lib/` — `trace.ts` (pure logic: QR parse/format `BT1:<ID>`, blend math, validations; no DOM, tested in Node), `store.ts` (localStorage demo persistence — NOT real auth, every consumer shows the modo-local banner), `scanner.ts` (getUserMedia + `jsqr` decode), `app-ui.ts` (profile guard, flash messages).
-- `src/pages/app/` — static pages with client-side logic: `index` (local profile select), `apicultor` (create/list lots), `envasadora` (reception/blends/analyses), `lote?id=` (ficha + QR via `qrcode`, JSON export, print). Query params drive them; no SSR.
+- `src/components/` — one `.astro` file per section; `LotCard.astro` (props: `lot`, `fields[]`, `steps[]`), small primitives (`Hex`, `Check`, `Brand`, `SectionIntro`); `nav.ts` exports `sections(lang)` + `home(lang)` used by `Header`/`Footer` — add nav labels in `src/lib/i18n.ts`, keep anchor `href`s in sync with section `id`s.
+- `src/lib/i18n.ts` — central ES/EN dict (`content.es` is the shape; `en` must match it or the build fails typecheck-by-shape). Helpers: `prefix`, `counterpart`, `docLang`. Landing components take `lang` prop; client scripts read locale from `document.documentElement.lang`.
+- `src/pages/` — two static trees: `/` (ES) and `/en/` (EN); app views live in `src/components/app/*View.astro` with thin wrappers in both trees. New user-facing strings go in the dict (both languages), never hardcoded in one locale.
+- `src/lib/` — `trace.ts` (pure logic: QR parse/format `BT1:<ID>`, blend math, validations; no DOM, tested in Node), `store.ts` (localStorage demo persistence — NOT real auth, every consumer shows the modo-local banner; messages localized via `setStoreLang`), `scanner.ts` (getUserMedia + `jsqr` decode), `app-ui.ts` (profile guard, flash messages).
 - Backend path: `README-BACKEND.md` — required before claiming real auth/permissions.
 - `astro.config.mjs` is empty default; `tsconfig.json` extends `astro/tsconfigs/strict`, excludes `dist`.
 

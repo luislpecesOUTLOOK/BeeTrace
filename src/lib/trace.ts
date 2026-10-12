@@ -102,19 +102,26 @@ export interface BlendCheck {
 }
 
 /** Validate a blend before confirming: positive kilos, within stock. */
-export function checkBlend(input: BlendInput): BlendCheck {
+export function checkBlend(input: BlendInput, lang: 'es' | 'en' = 'es'): BlendCheck {
   const errors: string[] = [];
-  if (input.uses.length === 0) errors.push('Selecciona al menos un lote de origen.');
+  if (input.uses.length === 0)
+    errors.push(lang === 'en' ? 'Select at least one source lot.' : 'Selecciona al menos un lote de origen.');
   let total = 0;
   for (const u of input.uses) {
     if (!(u.kg > 0)) {
-      errors.push(`Cantidad no válida en lote ${u.lotId}: debe ser mayor que 0.`);
+      errors.push(
+        lang === 'en'
+          ? `Invalid quantity in lot ${u.lotId}: it must be greater than 0.`
+          : `Cantidad no válida en lote ${u.lotId}: debe ser mayor que 0.`,
+      );
       continue;
     }
     const stock = input.stockOf(u.lotId);
     if (u.kg - stock > 1e-9) {
       errors.push(
-        `Sin stock suficiente en ${u.lotId}: pides ${u.kg} kg y hay ${stock} kg.`,
+        lang === 'en'
+          ? `Not enough stock in ${u.lotId}: asking for ${u.kg} kg, available ${stock} kg.`
+          : `Sin stock suficiente en ${u.lotId}: pides ${u.kg} kg y hay ${stock} kg.`,
       );
     }
     total += u.kg;

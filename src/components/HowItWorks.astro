@@ -1,40 +1,26 @@
 ---
 import Hex from './Hex.astro';
 import SectionIntro from './SectionIntro.astro';
+import { content, type Lang } from '../lib/i18n';
 
-const steps = [
-  {
-    title: 'Log the harvest',
-    body: 'Open a lot when you pull the frames: apiary, date and floral source. It takes a minute from your phone.',
-  },
-  {
-    title: 'Attach the proof',
-    body: 'Add the moisture reading, the lab analysis and photos as they come in. Each one is dated on the lot.',
-  },
-  {
-    title: 'Label every jar',
-    body: 'Print the lot code and QR on your labels. Every jar from that harvest points to the same record.',
-  },
-  {
-    title: 'Buyers check it',
-    body: 'Anyone with the jar scans the code and sees where it came from and what backs it up.',
-  },
-];
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'es' } = Astro.props;
+const c = content[lang].how;
 ---
 
 <section id="how-it-works" aria-labelledby="how-title">
   <div class="head">
-    <SectionIntro eyebrow="How it works" id="how-title">
-      From the frame to the shelf in four steps.
+    <SectionIntro eyebrow={c.eyebrow} id="how-title">
+      {c.title}
     </SectionIntro>
-    <p>
-      You keep working the way you do. BeeTrace turns each harvest into a lot record that travels
-      with the honey.
-    </p>
+    <p>{c.lede}</p>
   </div>
   <ol>
     {
-      steps.map((step, i) => (
+      c.steps.map((step, i) => (
         <li>
           <span class="badge">
             <Hex variant="outline" size={52} strokeWidth={1.6} />

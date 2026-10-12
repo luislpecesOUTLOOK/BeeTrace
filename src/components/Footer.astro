@@ -1,14 +1,26 @@
 ---
 import Brand from './Brand.astro';
-import { sections } from './nav';
+import { home, sections } from './nav';
+import { content, counterpart, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'es' } = Astro.props;
+const c = content[lang];
+const other: Lang = lang === 'en' ? 'es' : 'en';
 ---
 
 <footer>
-  <Brand size="sm" />
+  <Brand size="sm" home={home(lang)} />
   <nav aria-label="Footer">
-    {sections.map((link) => <a href={link.href}>{link.label}</a>)}
+    {sections(lang).map((link) => <a href={link.href}>{link.label}</a>)}
+    <a class="lang" href={counterpart('/', '', lang)} hreflang={other}>
+      {other === 'es' ? 'ES' : 'EN'}
+    </a>
   </nav>
-  <p>© 2026 BeeTrace</p>
+  <p>{c.footer.rights}</p>
 </footer>
 
 <style>
@@ -34,6 +46,15 @@ import { sections } from './nav';
   nav a {
     text-decoration: none;
     padding: 10px 0;
+  }
+
+  nav a.lang {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
   }
 
   p {

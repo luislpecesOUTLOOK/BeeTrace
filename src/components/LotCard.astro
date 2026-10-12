@@ -10,9 +10,11 @@ interface Props {
   lot: string;
   fields: { label: string; value: string }[];
   steps: Step[];
+  verified?: string;
+  qrNote?: string;
 }
 
-const { lot, fields, steps } = Astro.props;
+const { lot, fields, steps, verified = 'Verified', qrNote = '' } = Astro.props;
 ---
 
 <article aria-label={`Lot ${lot}`}>
@@ -20,7 +22,7 @@ const { lot, fields, steps } = Astro.props;
     <div class="lot">LOT {lot}</div>
     <div class="badge">
       <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"></path></svg>
-      Verified
+      {verified}
     </div>
   </div>
 
@@ -49,7 +51,7 @@ const { lot, fields, steps } = Astro.props;
 
   <div class="qr-row">
     <div class="qr" aria-hidden="true">QR</div>
-    <p>Printed on every jar. Buyers scan it to see this record.</p>
+    <p>{qrNote}</p>
   </div>
 </article>
 

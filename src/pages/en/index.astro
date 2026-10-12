@@ -1,0 +1,27 @@
+---
+import Base from '../../layouts/Base.astro';
+import ClosingCta from '../../components/ClosingCta.astro';
+import Footer from '../../components/Footer.astro';
+import ForBuyers from '../../components/ForBuyers.astro';
+import Header from '../../components/Header.astro';
+import Hero from '../../components/Hero.astro';
+import HowItWorks from '../../components/HowItWorks.astro';
+import Pricing from '../../components/Pricing.astro';
+import ScanSection from '../../components/ScanSection.astro';
+import { content } from '../../lib/i18n';
+
+const c = content.en.meta;
+---
+
+<Base title={c.title} description={c.description} lang="en">
+  <Header lang="en" />
+  <main id="main" tabindex="-1">
+    <Hero lang="en" />
+    <HowItWorks lang="en" />
+    <ForBuyers lang="en" />
+    <ScanSection lang="en" />
+    <Pricing lang="en" />
+    <ClosingCta lang="en" />
+  </main>
+  <Footer lang="en" />
+</Base>

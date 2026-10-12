@@ -1,11 +1,22 @@
+---
+import { content, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'es' } = Astro.props;
+const c = content[lang].cta;
+---
+
 <section aria-labelledby="cta-title">
   <div class="band">
     <div class="copy">
-      <h2 id="cta-title">Give your next harvest a record.</h2>
-      <p>Register a lot in a few minutes. Buyers can check it as soon as it is saved.</p>
+      <h2 id="cta-title">{c.title}</h2>
+      <p>{c.body}</p>
     </div>
     <a href="#pricing">
-      Register your first lot
+      {c.action}
       <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
     </a>
   </div>

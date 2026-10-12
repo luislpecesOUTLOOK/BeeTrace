@@ -7,13 +7,14 @@ import '@fontsource/jetbrains-mono/700.css';
 interface Props {
   title: string;
   description: string;
+  lang?: 'es' | 'en';
 }
 
-const { title, description } = Astro.props;
+const { title, description, lang = 'es' } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -5,6 +5,11 @@ import {
   takePendingScan,
   type Profile,
 } from './store.ts';
+import { docLang, prefix } from './i18n.ts';
+
+function P(): string {
+  return prefix(docLang());
+}
 
 export function flash(kind: 'ok' | 'error', text: string): void {
   let el = document.getElementById('app-flash');
@@ -23,11 +28,11 @@ export function flash(kind: 'ok' | 'error', text: string): void {
 export function requireProfile(role?: Profile['role']): Profile | null {
   const p = getProfile();
   if (!p) {
-    location.href = '/app/';
+    location.href = `${P()}/app/`;
     return null;
   }
   if (role && p.role !== role) {
-    location.href = p.role === 'apicultor' ? '/app/apicultor' : '/app/envasadora';
+    location.href = p.role === 'apicultor' ? `${P()}/app/apicultor` : `${P()}/app/envasadora`;
     return null;
   }
   return p;
@@ -35,13 +40,13 @@ export function requireProfile(role?: Profile['role']): Profile | null {
 
 export function signOut(): void {
   clearProfile();
-  location.href = '/app/';
+  location.href = `${P()}/app/`;
 }
 
 /** After entering, resume a scan that happened before access, if any. */
 export function resumePendingScan(): void {
   const pending = takePendingScan();
-  if (pending) location.href = `/app/lote?id=${encodeURIComponent(pending)}`;
+  if (pending) location.href = `${P()}/app/lote?id=${encodeURIComponent(pending)}`;
 }
 
 export function field<T extends HTMLElement>(id: string): T {

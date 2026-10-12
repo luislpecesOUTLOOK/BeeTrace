@@ -1,0 +1,447 @@
+---
+import App from '../../layouts/App.astro';
+import { content, prefix, type Lang } from '../../lib/i18n';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'es' } = Astro.props;
+const v = content[lang].env;
+const p = prefix(lang);
+---
+
+<App title="Envasadora · BeeTrace" lang={lang}>
+  <div class="who">
+    <h1>{v.title}</h1>
+    <p id="who-line" class="who-line"></p>
+    <div class="who-actions">
+      <a class="ghost" href={`${p}/#escanear`}>{v.scan}</a>
+      <button class="ghost" id="btn-out" type="button">{v.salir}</button>
+    </div>
+  </div>
+
+  <h2>{v.recTitle}</h2>
+  <form id="rec-form">
+    <label>
+      {v.fLot}
+      <input id="r-lot" required placeholder="BT-26-0412" />
+    </label>
+    <div id="r-origin" class="origin" hidden></div>
+    <div class="grid">
+      <label>
+        {v.fDate}
+        <input id="r-date" type="date" required />
+      </label>
+      <label>
+        {v.fKg}
+        <input id="r-kg" type="number" min="0.1" step="0.1" required />
+      </label>
+    </div>
+    <label>
+      {v.fResp}
+      <input id="r-resp" required />
+    </label>
+    <label>
+      {v.fSamples}
+      <input id="r-samples" placeholder="M-0412-A, M-0412-B" />
+    </label>
+    <label>
+      {v.fNotes}
+      <textarea id="r-notes"></textarea>
+    </label>
+    <label>
+      {v.fStatus}
+      <select id="r-status">
+        <option value="pendiente-analisis">{v.stPending}</option>
+        <option value="aceptado">{v.stAccepted}</option>
+        <option value="rechazado">{v.stRejected}</option>
+      </select>
+    </label>
+    <button class="primary" id="btn-rec" type="submit">{v.confirmRec}</button>
+  </form>
+
+  <h2>{v.blendTitle}</h2>
+  <p class="hint">{v.blendHint}</p>
+  <form id="blend-form">
+    <div id="blend-origins" class="origins"></div>
+    <label>
+      {v.bDrum}
+      <input id="b-drum" required placeholder="DEP-01" />
+    </label>
+    <div id="b-summary" class="origin" hidden></div>
+    <button class="primary" id="btn-blend" type="submit">{v.confirmBlend}</button>
+  </form>
+
+  <h2>{v.anaTitle}</h2>
+  <p class="hint">{v.anaHint}</p>
+  <form id="ana-form">
+    <div class="grid">
+      <label>
+        {v.fAnaLot}
+        <input id="a-lot" required placeholder="BT-26-0412" />
+      </label>
+      <label>
+        {v.fAnaDate}
+        <input id="a-date" type="date" required />
+      </label>
+    </div>
+    <div class="grid">
+      <label>
+        {v.fParam}
+        <input id="a-param" required list="params" placeholder={lang === 'en' ? 'Moisture' : 'Humedad'} />
+      </label>
+      <label>
+        {v.fValue}
+        <input id="a-value" required placeholder={v.fValuePh} />
+      </label>
+    </div>
+    <div class="grid">
+      <label>
+        {v.fUnit}
+        <input id="a-unit" placeholder={v.fUnitPh} />
+      </label>
+      <label>
+        {v.fMethod}
+        <input id="a-method" required list="methods" placeholder="NIR" />
+      </label>
+    </div>
+    <datalist id="params">
+      <option value={lang === 'en' ? 'Moisture' : 'Humedad'}></option>
+      <option value={lang === 'en' ? 'Sugars' : 'Azúcares'}></option>
+      <option value="HMF"></option>
+      <option value={lang === 'en' ? 'Pollen profile' : 'Perfil polínico'}></option>
+      <option value={lang === 'en' ? 'Adulteration / syrups' : 'Adulteración / jarabes'}></option>
+    </datalist>
+    <datalist id="methods">
+      <option value="NIR"></option>
+      <option value="FTIR"></option>
+      <option value={lang === 'en' ? 'NMR' : 'RMN'}></option>
+      <option value={lang === 'en' ? 'Portable kit' : 'Kit portátil'}></option>
+      <option value={lang === 'en' ? 'External lab' : 'Laboratorio externo'}></option>
+    </datalist>
+    <label class="check">
+      <input id="a-screen" type="checkbox" checked /> {v.fScreen}
+    </label>
+    <div class="grid">
+      <label>
+        {v.fSample}
+        <input id="a-sample" placeholder="M-0412-A" />
+      </label>
+      <label>
+        {v.fLab}
+        <input id="a-lab" placeholder={v.fLabPh} />
+      </label>
+    </div>
+    <label>
+      {v.fResp}
+      <input id="a-resp" />
+    </label>
+    <label>
+      {v.fReport}
+      <input id="a-report" placeholder="informe-0412.pdf" />
+    </label>
+    <button class="primary" id="btn-ana" type="submit">{v.saveAna}</button>
+  </form>
+
+  <h2>{v.history}</h2>
+  <ul class="card-list" id="mov-list"></ul>
+</App>
+
+<script>
+  import {
+    addAnalysis,
+    confirmBlend,
+    getLot,
+    listLots,
+    listMovements,
+    listReceptions,
+    registerReception,
+    setStoreLang,
+    type Profile,
+  } from '../../lib/store.ts';
+  import { blendComposition } from '../../lib/trace.ts';
+  import { flash, num, requireProfile, signOut, today, val, field } from '../../lib/app-ui';
+  import { content, docLang, prefix } from '../../lib/i18n';
+
+  const lang = docLang();
+  setStoreLang(lang);
+  const v = content[lang].env;
+  const P = prefix(lang);
+  const locale = lang === 'en' ? 'en' : 'es';
+
+  const profile = requireProfile('envasadora') as Profile | null;
+  if (profile) {
+    field('who-line').textContent = `${profile.name} · ${profile.org}`;
+    (document.getElementById('r-resp') as HTMLInputElement).value = profile.name;
+    (document.getElementById('r-date') as HTMLInputElement).value = today();
+    (document.getElementById('a-resp') as HTMLInputElement).value = profile.name;
+    (document.getElementById('a-date') as HTMLInputElement).value = today();
+
+    const preset = new URLSearchParams(location.search).get('id');
+    if (preset) {
+      (document.getElementById('r-lot') as HTMLInputElement).value = preset.toUpperCase();
+      showOrigin(preset.toUpperCase());
+    }
+    renderBlendOrigins();
+    renderMovements();
+  }
+
+  field('btn-out').addEventListener('click', signOut);
+
+  /* ---- reception ---- */
+
+  field('r-lot').addEventListener('change', (e) => {
+    showOrigin((e.target as HTMLInputElement).value.toUpperCase());
+  });
+
+  function showOrigin(id: string): void {
+    const box = field('r-origin');
+    const lot = getLot(id);
+    if (!lot) {
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    const recs = listReceptions(id);
+    box.textContent =
+      `${lot.id} · ${lot.honeyType}, ${lot.country} (${lot.farm}). ` +
+      `${v.originSent}: ${lot.totalKg} kg. ${v.originState}: ${lot.receptionStatus}. ` +
+      (recs.length > 0 ? `⚠️ ${v.originDup}` : v.originNone);
+  }
+
+  field('rec-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!profile) return;
+    const btn = field<HTMLButtonElement>('btn-rec');
+    btn.disabled = true;
+    try {
+      const rec = registerReception(
+        {
+          lotId: val('r-lot'),
+          date: val('r-date'),
+          kgReceived: num('r-kg'),
+          responsible: val('r-resp'),
+          notes: val('r-notes'),
+          samples: val('r-samples'),
+          status: val('r-status') as 'pendiente-analisis' | 'aceptado' | 'rechazado',
+        },
+        profile,
+      );
+      const lot = getLot(rec.lotId);
+      const diff = lot ? Math.round((rec.kgReceived - lot.totalKg) * 100) / 100 : 0;
+      flash(
+        'ok',
+        `${rec.lotId}: ${v.recOk}: ${rec.kgReceived} kg (${v.recDiff}: ${diff >= 0 ? '+' : ''}${diff} kg).`,
+      );
+      renderMovements();
+    } catch (err) {
+      flash('error', err instanceof Error ? err.message : v.errRec);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* ---- blends ---- */
+
+  function renderBlendOrigins(): void {
+    const box = field('blend-origins');
+    box.innerHTML = '';
+    const lots = listLots().filter((l) => l.availableKg > 0);
+    if (lots.length === 0) {
+      const pEl = document.createElement('p');
+      pEl.className = 'hint';
+      pEl.textContent = v.noStock;
+      box.append(pEl);
+      return;
+    }
+    for (const l of lots) {
+      const row = document.createElement('div');
+      row.className = 'blend-row';
+      const label = document.createElement('label');
+      label.className = 'check';
+      const check = document.createElement('input');
+      check.type = 'checkbox';
+      check.value = l.id;
+      label.append(check, ` ${l.id} · ${l.country} · ${v.stock} ${l.availableKg} kg`);
+      const kg = document.createElement('input');
+      kg.type = 'number';
+      kg.min = '0.1';
+      kg.step = '0.1';
+      kg.placeholder = 'kg';
+      kg.setAttribute('aria-label', `kg ${l.id}`);
+      row.append(label, kg);
+      box.append(row);
+    }
+    box.addEventListener('input', showBlendSummary);
+    box.addEventListener('change', showBlendSummary);
+  }
+
+  function readUses(): { lotId: string; kg: number }[] {
+    const uses: { lotId: string; kg: number }[] = [];
+    for (const row of document.querySelectorAll('.blend-row')) {
+      const check = row.querySelector('input[type=checkbox]') as HTMLInputElement;
+      const kg = row.querySelector('input[type=number]') as HTMLInputElement;
+      if (check.checked) uses.push({ lotId: check.value, kg: Number(kg.value.replace(',', '.')) });
+    }
+    return uses;
+  }
+
+  function showBlendSummary(): void {
+    const box = field('b-summary');
+    const uses = readUses();
+    if (uses.length === 0) {
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    const comp = blendComposition(
+      uses.filter((u) => u.kg > 0),
+      (id) => getLot(id)?.country ?? '?',
+    );
+    const total = comp.reduce((acc, c) => acc + c.kg, 0);
+    box.textContent =
+      `${v.summary}: ${Math.round(total * 100) / 100} kg. ` +
+      (comp.map((c) => `${c.country} ${c.pct}%`).join(' · ') || v.checkQty);
+  }
+
+  const blendIdemKey =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now());
+
+  field('blend-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!profile) return;
+    const btn = field<HTMLButtonElement>('btn-blend');
+    btn.disabled = true;
+    try {
+      const { lot, totalKg } = confirmBlend(
+        { uses: readUses(), drumId: val('b-drum'), responsible: profile.name, idemKey: blendIdemKey },
+        profile,
+      );
+      flash('ok', `${lot.id}: ${v.blendOk}: ${totalKg} kg.`);
+      location.href = `${P}/app/lote?id=${encodeURIComponent(lot.id)}`;
+    } catch (err) {
+      flash('error', err instanceof Error ? err.message : v.errBlend);
+      btn.disabled = false;
+    }
+  });
+
+  /* ---- analyses ---- */
+
+  field('ana-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!profile) return;
+    const btn = field<HTMLButtonElement>('btn-ana');
+    btn.disabled = true;
+    try {
+      const rec = addAnalysis(
+        {
+          lotId: val('a-lot'),
+          param: val('a-param'),
+          value: val('a-value'),
+          unit: val('a-unit'),
+          method: val('a-method'),
+          screening: (document.getElementById('a-screen') as HTMLInputElement).checked,
+          date: val('a-date'),
+          sample: val('a-sample'),
+          lab: val('a-lab'),
+          responsible: val('a-resp'),
+          reportName: val('a-report'),
+        },
+        profile,
+      );
+      flash('ok', `${v.anaOk} ${rec.lotId}: ${rec.param} (${rec.method}).`);
+      renderMovements();
+    } catch (err) {
+      flash('error', err instanceof Error ? err.message : v.errAna);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  function renderMovements(): void {
+    const ul = field('mov-list');
+    ul.innerHTML = '';
+    for (const m of listMovements(20)) {
+      const li = document.createElement('li');
+      li.className = 'lot-card';
+      const strong = document.createElement('strong');
+      strong.textContent = m.action;
+      const s1 = document.createElement('span');
+      s1.textContent = `${m.actor} · ${new Date(m.at).toLocaleString(locale)}`;
+      const s2 = document.createElement('span');
+      s2.textContent = m.detail;
+      li.append(strong, s1, s2);
+      ul.append(li);
+    }
+  }
+</script>
+
+<style>
+  .who-line {
+    color: var(--muted);
+    margin: 4px 0 12px;
+  }
+
+  .who-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .hint {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 520px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .origin {
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .origins {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .blend-row {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 8px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  .check {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 10px !important;
+  }
+
+  .check input[type='checkbox'] {
+    width: 26px;
+    height: 26px;
+    min-height: 0;
+    accent-color: var(--accent);
+  }
+</style>

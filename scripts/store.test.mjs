@@ -25,7 +25,7 @@ globalThis.sessionStorage = {
   },
 };
 
-const { createLot, registerReception, confirmBlend, getLot } = await import(
+const { createLot, registerReception, confirmBlend, getLot, setStoreLang } = await import(
   '../src/lib/store.ts'
 );
 
@@ -73,6 +73,25 @@ describe('receptions', () => {
         ),
       /duplicado|ya tiene/i,
     );
+  });
+});
+
+describe('language', () => {
+  it('reports store errors in English when asked', () => {
+    setStoreLang('en');
+    makeLot('BT-26-5001');
+    const input = (date) => ({
+      lotId: 'BT-26-5001',
+      date,
+      kgReceived: 99,
+      responsible: 'P',
+      notes: '',
+      samples: '',
+      status: 'aceptado',
+    });
+    registerReception(input('2026-06-05'), packer);
+    assert.throws(() => registerReception(input('2026-06-06'), packer), /already has/i);
+    setStoreLang('es');
   });
 });
 

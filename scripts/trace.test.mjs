@@ -64,6 +64,12 @@ describe('blends', () => {
     const check = checkBlend({ uses: [{ lotId: 'BT-26-0002', kg: 51 }], stockOf });
     assert.equal(check.ok, false);
   });
+  it('reports errors in English when asked', () => {
+    const check = checkBlend({ uses: [{ lotId: 'BT-26-0002', kg: 51 }], stockOf }, 'en');
+    assert.equal(check.ok, false);
+    assert.match(check.errors.join(' '), /stock/i);
+    assert.doesNotMatch(check.errors.join(' '), /Sin stock/);
+  });
   it('blocks zero and negative kilos', () => {
     assert.equal(checkBlend({ uses: [{ lotId: 'BT-26-0001', kg: 0 }], stockOf }).ok, false);
     assert.equal(checkBlend({ uses: [{ lotId: 'BT-26-0001', kg: -5 }], stockOf }).ok, false);

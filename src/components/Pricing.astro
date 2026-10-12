@@ -1,49 +1,34 @@
 ---
 import Check from './Check.astro';
 import SectionIntro from './SectionIntro.astro';
+import { content, type Lang } from '../lib/i18n';
 
-// Placeholder plans: names, prices and limits are not set yet.
-const plans = [
-  {
-    name: '[Plan 1]',
-    blurb: 'For a few hives and a market stall.',
-    features: ['[N] lots per year', 'QR codes for every jar', 'Public lot pages', 'Email support'],
-    cta: 'Choose [Plan 1]',
-  },
-  {
-    name: '[Plan 2]',
-    blurb: 'For apiaries selling to shops.',
-    features: ['[N] lots per year', 'Everything in [Plan 1]', 'Lab documents on lot pages', 'Label templates'],
-    cta: 'Choose [Plan 2]',
-    featured: true,
-  },
-  {
-    name: '[Plan 3]',
-    blurb: 'For co-ops and packers with many suppliers.',
-    features: ['Unlimited lots', 'Everything in [Plan 2]', 'Several beekeepers, one account', 'Priority support'],
-    cta: 'Talk to us',
-  },
-];
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'es' } = Astro.props;
+const c = content[lang].pricing;
 ---
 
 <section id="pricing" aria-labelledby="pricing-title">
   <div class="head">
-    <SectionIntro eyebrow="Pricing" id="pricing-title" align="center">
-      Priced by the lot, not the jar.
+    <SectionIntro eyebrow={c.eyebrow} id="pricing-title" align="center">
+      {c.title}
     </SectionIntro>
-    <p>Placeholder plans. Names, prices and limits are still to be set.</p>
+    <p>{c.lede}</p>
   </div>
   <div class="plans">
     {
-      plans.map((plan) => (
-        <article class:list={['plan', { featured: plan.featured }]}>
+      c.plans.map((plan, i) => (
+        <article class:list={['plan', { featured: i === 1 }]}>
           <div class="plan-top">
             <h3>{plan.name}</h3>
-            {plan.featured && <span class="tag">Suggested</span>}
+            {i === 1 && <span class="tag">{c.suggested}</span>}
           </div>
           <p class="price">
             <span class="amount">[PRICE]</span>
-            <span class="per">/ month</span>
+            <span class="per">{c.per}</span>
           </p>
           <p class="blurb">{plan.blurb}</p>
           <ul>

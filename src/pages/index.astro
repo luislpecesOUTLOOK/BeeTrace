@@ -8,20 +8,20 @@ import Hero from '../components/Hero.astro';
 import HowItWorks from '../components/HowItWorks.astro';
 import Pricing from '../components/Pricing.astro';
 import ScanSection from '../components/ScanSection.astro';
+import { content } from '../lib/i18n';
+
+const c = content.es.meta;
 ---
 
-<Base
-  title="BeeTrace — Every jar, traced back to the hive"
-  description="Lot traceability for beekeepers: log each harvest as a lot, attach what proves it, and hand buyers a code they can check in seconds."
->
-  <Header />
+<Base title={c.title} description={c.description} lang="es">
+  <Header lang="es" />
   <main id="main" tabindex="-1">
-    <Hero />
-    <HowItWorks />
-    <ForBuyers />
-    <ScanSection />
-    <Pricing />
-    <ClosingCta />
+    <Hero lang="es" />
+    <HowItWorks lang="es" />
+    <ForBuyers lang="es" />
+    <ScanSection lang="es" />
+    <Pricing lang="es" />
+    <ClosingCta lang="es" />
   </main>
-  <Footer />
+  <Footer lang="es" />
 </Base>

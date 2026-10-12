@@ -1,24 +1,28 @@
 ---
 import Base from './Base.astro';
+import { content, type Lang } from '../lib/i18n';
+import { home } from '../components/nav';
 
 interface Props {
   title: string;
+  lang?: Lang;
 }
 
-const { title } = Astro.props;
+const { title, lang = 'es' } = Astro.props;
+const n = content[lang].appNotice;
 ---
 
-<Base title={title} description="Zona privada de BeeTrace: lotes, recepciones, mezclas y análisis.">
+<Base
+  title={title}
+  description="Zona privada de BeeTrace: lotes, recepciones, mezclas y análisis."
+  lang={lang}
+>
   <div class="app">
     <header class="top">
-      <a class="back" href="/">← BeeTrace</a>
-      <span class="env">Modo local · sin servidor</span>
+      <a class="back" href={home(lang)}>← {n.back}</a>
+      <span class="env">{n.local}</span>
     </header>
-    <p class="notice" role="note">
-      Estás en una <strong>vista previa local</strong>: los datos se guardan en este
-      dispositivo y no hay autenticación real. Nada de lo que veas aquí es una
-      certificación oficial.
-    </p>
+    <p class="notice" role="note" set:html={n.body} />
     <main>
       <slot />
     </main>

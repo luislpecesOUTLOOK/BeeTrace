@@ -1,32 +1,38 @@
 ---
+import { content, prefix, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'es' } = Astro.props;
+const c = content[lang].scan;
+const p = prefix(lang);
 ---
 
 <section class="scan" id="escanear" aria-labelledby="scan-title">
   <div class="head">
-    <p class="eyebrow">Trazabilidad en el móvil</p>
-    <h2 id="scan-title">Escanea y registra tu lote</h2>
-    <p class="lede">
-      Apunta con la cámara al QR del bidón o del lote. Si el lote existe y tienes
-      permiso, verás su ficha; si es nuevo, podrás registrarlo.
-    </p>
+    <p class="eyebrow">{c.eyebrow}</p>
+    <h2 id="scan-title">{c.title}</h2>
+    <p class="lede">{c.lede}</p>
   </div>
 
   <div class="access" role="list">
-    <a class="card" role="listitem" href="/app/?rol=apicultor">
-      <strong>Acceso para apicultores</strong>
-      <span>Crea lotes, genera sus QR e imprímelos para los bidones.</span>
+    <a class="card" role="listitem" href={`${p}/app/?rol=apicultor`}>
+      <strong>{c.cardApi}</strong>
+      <span>{c.cardApiSub}</span>
     </a>
-    <a class="card" role="listitem" href="/app/?rol=envasadora">
-      <strong>Acceso para envasadoras</strong>
-      <span>Recibe lotes, registra análisis y crea mezclas trazables.</span>
+    <a class="card" role="listitem" href={`${p}/app/?rol=envasadora`}>
+      <strong>{c.cardEnv}</strong>
+      <span>{c.cardEnvSub}</span>
     </a>
   </div>
 
   <div class="panel">
     <div class="actions">
-      <button type="button" class="primary" id="scan-open">Abrir cámara</button>
+      <button type="button" class="primary" id="scan-open">{c.open}</button>
       <label class="file">
-        Leer QR desde imagen
+        {c.readFromImage}
         <input type="file" id="scan-file" accept="image/*" hidden />
       </label>
     </div>
@@ -38,15 +44,15 @@
       </div>
       <canvas id="scan-canvas" hidden></canvas>
       <div class="reader-actions">
-        <button type="button" id="scan-switch" hidden>Cambiar cámara</button>
-        <button type="button" id="scan-close">Cerrar escáner</button>
+        <button type="button" id="scan-switch" hidden>{c.switchCamera}</button>
+        <button type="button" id="scan-close">{c.closeScanner}</button>
       </div>
     </div>
 
     <p class="status" id="scan-status" role="status"></p>
 
     <form class="manual" id="scan-manual">
-      <label for="scan-input">O introduce el identificador a mano</label>
+      <label for="scan-input">{c.manualLabel}</label>
       <div class="row">
         <input
           id="scan-input"
@@ -55,7 +61,7 @@
           autocomplete="off"
           placeholder="BT-26-0412"
         />
-        <button type="submit" class="secondary">Consultar</button>
+        <button type="submit" class="secondary">{c.consult}</button>
       </div>
     </form>
 
@@ -66,7 +72,12 @@
 <script>
   import { QrScanner, decodeImageFile, type ScanState } from '../lib/scanner';
   import { parseScannedText } from '../lib/trace';
-  import { getLot, getProfile, setPendingScan } from '../lib/store';
+  import { getLot, getProfile, setPendingScan } from '../lib/store.ts';
+  import { content, docLang, prefix } from '../lib/i18n';
+
+  const lang = docLang();
+  const c = content[lang].scan;
+  const p = prefix(lang);
 
   const reader = document.getElementById('scan-reader') as HTMLElement;
   const video = document.getElementById('scan-video') as HTMLVideoElement;
@@ -82,13 +93,12 @@
 
   const STATE_TEXT: Record<ScanState, string> = {
     idle: '',
-    starting: 'Abriendo cámara…',
-    scanning: 'Apunta al QR dentro del marco.',
-    denied:
-      'Permiso de cámara denegado. Actívalo en los ajustes del navegador o introduce el identificador a mano.',
-    'no-camera': 'No hay cámara disponible. Introduce el identificador a mano o sube una imagen.',
-    unsupported: 'Este dispositivo o navegador no admite la cámara. Usa la introducción manual.',
-    insecure: 'La cámara necesita HTTPS. Introduce el identificador a mano o sube una imagen.',
+    starting: c.states.starting,
+    scanning: c.states.scanning,
+    denied: c.states.denied,
+    'no-camera': c.states.noCamera,
+    unsupported: c.states.unsupported,
+    insecure: c.states.insecure,
   };
 
   const scanner = new QrScanner(video, canvas, {
@@ -102,7 +112,7 @@
   function closeReader(): void {
     scanner.stop();
     reader.hidden = true;
-    openBtn.textContent = 'Abrir cámara';
+    openBtn.textContent = c.open;
   }
 
   openBtn.addEventListener('click', async () => {
@@ -112,7 +122,7 @@
       return;
     }
     reader.hidden = false;
-    openBtn.textContent = 'Cerrar';
+    openBtn.textContent = c.close;
     await scanner.start();
   });
 
@@ -129,16 +139,16 @@
     const file = fileInput.files?.[0];
     fileInput.value = '';
     if (!file) return;
-    status.textContent = 'Leyendo imagen…';
+    status.textContent = c.readingImage;
     try {
       const text = await decodeImageFile(file);
       if (text) handleText(text, false);
       else {
-        status.textContent = 'No se encontró ningún QR en esa imagen.';
-        showResult(false, 'Sin QR legible', 'La imagen no contiene un código QR válido.');
+        status.textContent = c.noQrInImage;
+        showResult(false, c.noQrTitle, c.noQrBody);
       }
     } catch {
-      status.textContent = 'No se pudo leer esa imagen.';
+      status.textContent = c.imageUnreadable;
     }
   });
 
@@ -150,42 +160,31 @@
   function handleText(raw: string, fromCamera: boolean): void {
     const parsed = parseScannedText(raw);
     if (!parsed.ok) {
-      status.textContent =
-        parsed.reason === 'empty'
-          ? 'Introduce un identificador.'
-          : 'Ese código no es un QR de BeeTrace. No se abrió ningún enlace externo.';
-      showResult(false, 'Código no válido', 'Comprueba el identificador o pide un QR de BeeTrace.');
+      status.textContent = parsed.reason === 'empty' ? c.emptyId : c.foreign;
+      showResult(false, c.invalidTitle, c.invalidBody);
       return;
     }
     const lotId = parsed.lotId;
     if (fromCamera) {
       scanner.stop();
       reader.hidden = true;
-      openBtn.textContent = 'Abrir cámara';
+      openBtn.textContent = c.open;
     }
     const lot = getLot(lotId);
     const profile = getProfile();
     if (!profile) {
       // Keep the identifier and resume the flow after access, checking permissions there.
       setPendingScan(lotId);
-      status.textContent = `Lote ${lotId} detectado. Entra para continuar.`;
-      showResult(
-        true,
-        `Lote ${lotId}`,
-        lot
-          ? 'Existe en este dispositivo. Entra como apicultor o envasadora para ver su ficha.'
-          : 'Identificador válido y nuevo. Entra como apicultor para crearlo.',
-        [{ href: '/app/', label: 'Entrar para continuar' }],
-      );
+      status.textContent = `${c.lotWord} ${lotId} ${c.detected}.`;
+      showResult(true, `${lotId}`, lot ? c.loginFound : c.loginNew, [
+        { href: `${p}/app/`, label: c.loginTitle },
+      ]);
       return;
     }
-    status.textContent = `Lote ${lotId} detectado.`;
-    showResult(
-      true,
-      `Lote ${lotId}`,
-      lot ? 'Lote encontrado en este dispositivo.' : 'Identificador válido y nuevo.',
-      [{ href: `/app/lote?id=${encodeURIComponent(lotId)}`, label: 'Abrir ficha del lote' }],
-    );
+    status.textContent = `${c.lotWord} ${lotId} ${c.detected}.`;
+    showResult(true, lotId, lot ? c.foundBody : c.newBody, [
+      { href: `${p}/app/lote?id=${encodeURIComponent(lotId)}`, label: c.openRecord },
+    ]);
   }
 
   function showResult(
@@ -200,9 +199,9 @@
     const h = document.createElement('p');
     h.className = 'result-title';
     h.textContent = title;
-    const p = document.createElement('p');
-    p.textContent = body;
-    result.append(h, p);
+    const pEl = document.createElement('p');
+    pEl.textContent = body;
+    result.append(h, pEl);
     for (const l of links) {
       const a = document.createElement('a');
       a.href = l.href;

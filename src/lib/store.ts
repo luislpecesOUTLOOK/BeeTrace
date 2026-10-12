@@ -13,6 +13,84 @@ import {
   normalizeLotId,
   type ReceptionStatus,
 } from './trace.ts';
+import type { Lang } from './i18n.ts';
+
+let storeLang: Lang = 'es';
+
+export function setStoreLang(lang: Lang): void {
+  storeLang = lang;
+}
+
+const STR = {
+  es: {
+    badLotId: 'Identificador de lote no válido.',
+    lotExists: (id: string) => `El lote ${id} ya existe.`,
+    lotMissing: (id: string) => `El lote ${id} no existe.`,
+    recDone: (id: string, st: string) => `El lote ${id} ya tiene una recepción registrada (${st}).`,
+    recDup: (id: string) => `El lote ${id} ya tiene una recepción registrada (duplicado bloqueado).`,
+    recKg: 'La cantidad recibida debe ser mayor que 0.',
+    originMissing: (id: string) => `Lote de origen ${id} no encontrado.`,
+    drumRequired: 'Indica el bidón o depósito de la mezcla.',
+    anaParam: 'Indica el parámetro analizado.',
+    anaValue: 'Indica el valor o la conclusión.',
+    anaMethod: 'Indica el método de análisis.',
+    logCreated: (id: string) => `Lote ${id} creado`,
+    logCreatedDetail: (kg: number, type: string) => `${kg} kg de ${type}.`,
+    logRec: (id: string) => `Recepción de ${id}`,
+    logRecDetail: (kg: number, sent: number, diff: number, st: string) =>
+      `${kg} kg (enviados: ${sent} kg, diferencia: ${diff >= 0 ? '+' : ''}${diff} kg). Estado: ${st}.`,
+    logBlend: (id: string) => `Mezcla ${id} confirmada`,
+    logBlendDetail: (kg: number, n: number, drum: string) =>
+      `${kg} kg desde ${n} lote(s) en ${drum}.`,
+    logAna: (id: string) => `Análisis en ${id}`,
+    logAnaDetail: (param: string, value: string, unit: string, method: string, screening: boolean) =>
+      `${param}: ${value}${unit ? ' ' + unit : ''} (${method}, ${screening ? 'cribado' : 'confirmatorio'}).`,
+    seedAction: 'Datos de demostración cargados',
+    seedDetail: 'Lote BT-26-0412 de ejemplo. Tus lotes reales aparecen sin la marca «demo».',
+    seedKeeper: 'Apícola La Rubia (demo)',
+    seedFarm: 'Colmenar La Rubia',
+    seedCountry: 'España',
+    seedLocation: 'La Alcarria, Guadalajara',
+    seedType: 'Romero',
+    seedDoc: 'Análisis humedad (demo)',
+  },
+  en: {
+    badLotId: 'Invalid lot identifier.',
+    lotExists: (id: string) => `Lot ${id} already exists.`,
+    lotMissing: (id: string) => `Lot ${id} does not exist.`,
+    recDone: (id: string, st: string) => `Lot ${id} already has a registered reception (${st}).`,
+    recDup: (id: string) => `Lot ${id} already has a registered reception (duplicate blocked).`,
+    recKg: 'The received quantity must be greater than 0.',
+    originMissing: (id: string) => `Source lot ${id} not found.`,
+    drumRequired: 'Enter the blend drum or tank.',
+    anaParam: 'Enter the analysed parameter.',
+    anaValue: 'Enter the value or conclusion.',
+    anaMethod: 'Enter the analysis method.',
+    logCreated: (id: string) => `Lot ${id} created`,
+    logCreatedDetail: (kg: number, type: string) => `${kg} kg of ${type}.`,
+    logRec: (id: string) => `Reception of ${id}`,
+    logRecDetail: (kg: number, sent: number, diff: number, st: string) =>
+      `${kg} kg (shipped: ${sent} kg, difference: ${diff >= 0 ? '+' : ''}${diff} kg). Status: ${st}.`,
+    logBlend: (id: string) => `Blend ${id} confirmed`,
+    logBlendDetail: (kg: number, n: number, drum: string) =>
+      `${kg} kg from ${n} lot(s) into ${drum}.`,
+    logAna: (id: string) => `Analysis on ${id}`,
+    logAnaDetail: (param: string, value: string, unit: string, method: string, screening: boolean) =>
+      `${param}: ${value}${unit ? ' ' + unit : ''} (${method}, ${screening ? 'screening' : 'confirmatory'}).`,
+    seedAction: 'Demo data loaded',
+    seedDetail: 'Sample lot BT-26-0412. Your real lots appear without the “demo” tag.',
+    seedKeeper: 'La Rubia Apiary (demo)',
+    seedFarm: 'La Rubia Apiary',
+    seedCountry: 'Spain',
+    seedLocation: 'La Alcarria, Guadalajara',
+    seedType: 'Rosemary',
+    seedDoc: 'Moisture analysis (demo)',
+  },
+} satisfies Record<Lang, unknown> as Record<Lang, typeof STR.es>;
+
+function S(): typeof STR.es {
+  return STR[storeLang];
+}
 
 export type Role = 'apicultor' | 'envasadora';
 
@@ -115,6 +193,7 @@ function uid(prefix: string): string {
 
 function seed(): Db {
   const t = now();
+  const s = STR[storeLang];
   return {
     version: 1,
     seq: 413,
@@ -122,20 +201,20 @@ function seed(): Db {
       {
         id: 'BT-26-0412',
         kind: 'origen',
-        beekeeper: 'Apícola La Rubia (demo)',
-        farm: 'Colmenar La Rubia',
-        country: 'España',
-        location: 'La Alcarria, Guadalajara',
+        beekeeper: s.seedKeeper,
+        farm: s.seedFarm,
+        country: s.seedCountry,
+        location: s.seedLocation,
         harvestDate: '2026-06-14',
         extractionDate: '2026-06-16',
-        honeyType: 'Romero',
+        honeyType: s.seedType,
         totalKg: 240,
         availableKg: 240,
         drums: [
           { id: 'BID-0412-01', weightKg: 120 },
           { id: 'BID-0412-02', weightKg: 120 },
         ],
-        docs: [{ name: 'Análisis humedad (demo)' }],
+        docs: [{ name: s.seedDoc }],
         destCompany: '',
         shipDate: '',
         receptionStatus: 'no-enviado',
@@ -154,8 +233,8 @@ function seed(): Db {
         at: t,
         actor: 'sistema',
         role: 'sistema',
-        action: 'Datos de demostración cargados',
-        detail: 'Lote BT-26-0412 de ejemplo. Tus lotes reales aparecen sin la marca «demo».',
+        action: s.seedAction,
+        detail: s.seedDetail,
       },
     ],
   };
@@ -224,9 +303,9 @@ export interface NewLotInput {
 
 export function createLot(input: NewLotInput, actor: Profile): LotRec {
   const id = input.id ? normalizeLotId(input.id) : nextLotId();
-  if (!isValidLotId(id)) throw new Error('Identificador de lote no válido.');
+  if (!isValidLotId(id)) throw new Error(S().badLotId);
   const db = load();
-  if (db.lots.some((l) => l.id === id)) throw new Error(`El lote ${id} ya existe.`);
+  if (db.lots.some((l) => l.id === id)) throw new Error(S().lotExists(id));
   const t = now();
   const lot: LotRec = {
     id,
@@ -251,7 +330,7 @@ export function createLot(input: NewLotInput, actor: Profile): LotRec {
     idemKeys: [],
   };
   db.lots.unshift(lot);
-  log(db, actor.name, actor.role, `Lote ${id} creado`, `${input.totalKg} kg de ${input.honeyType}.`);
+  log(db, actor.name, actor.role, S().logCreated(id), S().logCreatedDetail(input.totalKg, input.honeyType));
   save(db);
   return lot;
 }
@@ -271,14 +350,14 @@ export function registerReception(input: ReceptionInput, actor: Profile): Recept
   const lotId = normalizeLotId(input.lotId);
   const db = load();
   const lot = db.lots.find((l) => l.id === lotId);
-  if (!lot) throw new Error(`El lote ${lotId} no existe.`);
+  if (!lot) throw new Error(S().lotMissing(lotId));
   if (lot.receptionStatus === 'aceptado' || lot.receptionStatus === 'rechazado') {
-    throw new Error(`El lote ${lotId} ya tiene una recepción registrada (${lot.receptionStatus}).`);
+    throw new Error(S().recDone(lotId, lot.receptionStatus));
   }
   if (db.receptions.some((r) => r.lotId === lotId)) {
-    throw new Error(`El lote ${lotId} ya tiene una recepción registrada (duplicado bloqueado).`);
+    throw new Error(S().recDup(lotId));
   }
-  if (!(input.kgReceived > 0)) throw new Error('La cantidad recibida debe ser mayor que 0.');
+  if (!(input.kgReceived > 0)) throw new Error(S().recKg);
   const rec: ReceptionRec = {
     id: uid('rec'),
     lotId,
@@ -303,8 +382,8 @@ export function registerReception(input: ReceptionInput, actor: Profile): Recept
     db,
     actor.name,
     actor.role,
-    `Recepción de ${lotId}`,
-    `${input.kgReceived} kg (enviados: ${lot.totalKg} kg, diferencia: ${diff >= 0 ? '+' : ''}${diff} kg). Estado: ${input.status}.`,
+    S().logRec(lotId),
+    S().logRecDetail(input.kgReceived, lot.totalKg, diff, input.status),
   );
   save(db);
   return rec;
@@ -328,12 +407,12 @@ export function confirmBlend(input: BlendInput, actor: Profile): { lot: LotRec; 
 
   const stockOf = (lotId: string): number => {
     const l = db.lots.find((x) => x.id === normalizeLotId(lotId));
-    if (!l) throw new Error(`Lote de origen ${lotId} no encontrado.`);
+    if (!l) throw new Error(S().originMissing(lotId));
     return l.availableKg;
   };
-  const check = checkBlend({ uses: input.uses, stockOf });
+  const check = checkBlend({ uses: input.uses, stockOf }, storeLang);
   if (!check.ok) throw new Error(check.errors.join(' '));
-  if (!input.drumId.trim()) throw new Error('Indica el bidón o depósito de la mezcla.');
+  if (!input.drumId.trim()) throw new Error(S().drumRequired);
 
   for (const u of input.uses) {
     const l = db.lots.find((x) => x.id === normalizeLotId(u.lotId));
@@ -374,8 +453,8 @@ export function confirmBlend(input: BlendInput, actor: Profile): { lot: LotRec; 
     db,
     actor.name,
     actor.role,
-    `Mezcla ${id} confirmada`,
-    `${check.totalKg} kg desde ${input.uses.length} lote(s) en ${input.drumId.trim()}.`,
+    S().logBlend(id),
+    S().logBlendDetail(check.totalKg, input.uses.length, input.drumId.trim()),
   );
   save(db);
   return { lot, totalKg: check.totalKg };
@@ -404,10 +483,10 @@ export function addAnalysis(input: AnalysisInput, actor: Profile): AnalysisRec {
   const lotId = normalizeLotId(input.lotId);
   const db = load();
   const lot = db.lots.find((l) => l.id === lotId);
-  if (!lot) throw new Error(`El lote ${lotId} no existe.`);
-  if (!input.param.trim()) throw new Error('Indica el parámetro analizado.');
-  if (!input.value.trim()) throw new Error('Indica el valor o la conclusión.');
-  if (!input.method.trim()) throw new Error('Indica el método de análisis.');
+  if (!lot) throw new Error(S().lotMissing(lotId));
+  if (!input.param.trim()) throw new Error(S().anaParam);
+  if (!input.value.trim()) throw new Error(S().anaValue);
+  if (!input.method.trim()) throw new Error(S().anaMethod);
   const rec: AnalysisRec = {
     id: uid('ana'),
     lotId,
@@ -429,8 +508,8 @@ export function addAnalysis(input: AnalysisInput, actor: Profile): AnalysisRec {
     db,
     actor.name,
     actor.role,
-    `Análisis en ${lotId}`,
-    `${rec.param}: ${rec.value}${rec.unit ? ' ' + rec.unit : ''} (${rec.method}, ${rec.screening ? 'cribado' : 'confirmatorio'}).`,
+    S().logAna(lotId),
+    S().logAnaDetail(rec.param, rec.value, rec.unit, rec.method, rec.screening),
   );
   save(db);
   return rec;

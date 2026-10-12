@@ -1,0 +1,322 @@
+---
+import App from '../../layouts/App.astro';
+import { content, type Lang } from '../../lib/i18n';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'es' } = Astro.props;
+const l = content[lang].lote;
+---
+
+<App title="Ficha de lote · BeeTrace" lang={lang}>
+  <div id="lote-root"></div>
+  <div class="nav-row">
+    <a class="ghost" id="back-link" href="#">{l.back}</a>
+    <button class="ghost" id="btn-json" type="button">{l.exportJson}</button>
+    <button class="ghost" id="btn-print" type="button">{l.print}</button>
+  </div>
+</App>
+
+<script>
+  import QRCode from 'qrcode';
+  import {
+    getLot,
+    getProfile,
+    listAnalyses,
+    listMovements,
+    listReceptions,
+    setStoreLang,
+    type LotRec,
+  } from '../../lib/store.ts';
+  import { blendComposition, qrPayloadFor } from '../../lib/trace.ts';
+  import { field } from '../../lib/app-ui';
+  import { content, docLang, prefix } from '../../lib/i18n';
+
+  const lang = docLang();
+  setStoreLang(lang);
+  const l = content[lang].lote;
+  const P = prefix(lang);
+  const locale = lang === 'en' ? 'en' : 'es';
+
+  const root = field('lote-root');
+  const params = new URLSearchParams(location.search);
+  const id = (params.get('id') ?? '').toUpperCase();
+  const profile = getProfile();
+  if (!profile) location.href = `${P}/app/`;
+  if (!id) location.href = `${P}/app/`;
+
+  const back = document.getElementById('back-link') as HTMLAnchorElement;
+  if (profile) back.href = profile.role === 'apicultor' ? `${P}/app/apicultor` : `${P}/app/envasadora`;
+
+  const lot = getLot(id);
+  if (!lot) {
+    const h1 = document.createElement('h1');
+    h1.textContent = `${l.lotWord} ${id}`;
+    const err = document.createElement('p');
+    err.className = 'flash';
+    err.dataset.kind = 'error';
+    err.textContent = l.notFound;
+    root.append(h1, err);
+    if (profile?.role === 'apicultor') {
+      const aEl = document.createElement('a');
+      aEl.className = 'primary';
+      aEl.href = `${P}/app/apicultor?crear=${encodeURIComponent(id)}`;
+      aEl.textContent = l.createThis;
+      root.append(aEl);
+    } else {
+      const pEl = document.createElement('p');
+      pEl.className = 'hint';
+      pEl.textContent = l.askPacker;
+      root.append(pEl);
+    }
+  } else {
+    void render(lot);
+  }
+
+  async function render(rec: LotRec): Promise<void> {
+    const demo = rec.demo ? ` · ${l.demoData}` : '';
+    const comp =
+      rec.kind === 'mezcla' ? blendComposition(rec.origins, (x) => getLot(x)?.country ?? '?') : [];
+    const recs = listReceptions(rec.id);
+    const anas = listAnalyses(rec.id);
+    const movs = listMovements(50).filter(
+      (m) => m.action.includes(rec.id) || m.detail.includes(rec.id),
+    );
+    const h1 = document.createElement('h1');
+    h1.textContent = `${rec.kind === 'mezcla' ? l.kindMezcla : l.kindOrigen} ${rec.id}${demo}`;
+
+    const kind = document.createElement('p');
+    kind.className = 'kind';
+    kind.textContent = `${rec.kind === 'mezcla' ? l.kindMezcla : l.kindOrigen} · ${l.estado}: ${rec.receptionStatus}`;
+
+    const qrBox = document.createElement('div');
+    qrBox.className = 'qr-box';
+    const canvas = document.createElement('canvas');
+    canvas.width = 220;
+    canvas.height = 220;
+    const qrSide = document.createElement('div');
+    const hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.textContent = l.qrHint;
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'ghost';
+    dlBtn.type = 'button';
+    dlBtn.textContent = l.dlQr;
+    dlBtn.addEventListener('click', () => {
+      const aEl = document.createElement('a');
+      aEl.download = `QR-${rec.id}.png`;
+      aEl.href = canvas.toDataURL('image/png');
+      aEl.click();
+    });
+    qrSide.append(hint, dlBtn);
+    qrBox.append(canvas, qrSide);
+
+    const ficha = document.createElement('dl');
+    ficha.className = 'ficha';
+    const originVal =
+      rec.kind === 'mezcla'
+        ? comp.map((c) => `${c.country}: ${c.pct}%`).join(' · ') || l.none
+        : `${rec.farm} · ${rec.country} · ${rec.location}`;
+    const rows: [string, string][] = [
+      [l.rResp, rec.beekeeper],
+      [rec.kind === 'mezcla' ? l.rComposition : l.rOrigin, originVal],
+      [l.rDates, `${rec.harvestDate} / ${rec.extractionDate}`],
+      [l.rType, rec.honeyType],
+      [l.rQty, `${rec.totalKg} kg (${l.available}: ${rec.availableKg} kg)`],
+      [l.rDest, rec.destCompany ? `${rec.destCompany} · ${rec.shipDate || l.noDate}` : l.none],
+      [l.rDocs, rec.docs.length ? rec.docs.map((d) => d.name).join(', ') : l.none],
+    ];
+    for (const [k, v] of rows) {
+      const div = document.createElement('div');
+      const dt = document.createElement('dt');
+      dt.textContent = k;
+      const dd = document.createElement('dd');
+      dd.textContent = v;
+      div.append(dt, dd);
+      ficha.append(div);
+    }
+
+    root.append(h1, kind, qrBox, ficha);
+    root.append(listSection(l.drums, rec.drums.map((d) => [d.id, `${d.weightKg} kg`] as [string, string])));
+    if (rec.origins.length) {
+      root.append(
+        listSection(
+          l.blendTrace,
+          rec.origins.map((o) => [o.lotId, `${o.kg} kg ${l.contributed}`] as [string, string]),
+        ),
+      );
+    }
+    root.append(
+      listSection(
+        l.receptions,
+        recs.map((r) => [`${r.date} · ${r.kgReceived} kg`, `${r.responsible} · ${r.status}${r.notes ? ' · ' + r.notes : ''}`] as [string, string]),
+        l.noRec,
+      ),
+    );
+    root.append(
+      listSection(
+        l.analyses,
+        anas.map(
+          (a) =>
+            [
+              `${a.param}: ${a.value}${a.unit ? ' ' + a.unit : ''}`,
+              `${a.method} · ${a.screening ? l.screening : l.confirmatory} · ${a.date} · ${l.sample} ${a.sample || l.none} · ${a.lab || l.none} · ${a.responsible || l.none}${a.reportName ? ' · ' + a.reportName : ''}`,
+            ] as [string, string],
+        ),
+        l.noAna,
+        l.anaHint,
+      ),
+    );
+    root.append(listSection(l.movements, movs.map((m) => [m.action, `${m.actor} · ${new Date(m.at).toLocaleString(locale)} · ${m.detail}`] as [string, string]), l.noMov));
+
+    const legal = document.createElement('p');
+    legal.className = 'hint legal';
+    legal.textContent = l.legal;
+    root.append(legal);
+
+    await QRCode.toCanvas(canvas, qrPayloadFor(rec.id), { width: 220, margin: 2 });
+  }
+
+  function listSection(
+    title: string,
+    items: [string, string][],
+    emptyText?: string,
+    hintText?: string,
+  ): DocumentFragment {
+    const frag = document.createDocumentFragment();
+    const h2 = document.createElement('h2');
+    h2.textContent = title;
+    frag.append(h2);
+    if (items.length === 0) {
+      const pEl = document.createElement('p');
+      pEl.className = 'hint';
+      pEl.textContent = emptyText ?? '';
+      frag.append(pEl);
+      if (emptyText === l.noAna && hintText) {
+        const h = document.createElement('p');
+        h.className = 'hint';
+        h.textContent = hintText;
+        frag.append(h);
+      }
+      return frag;
+    }
+    const ul = document.createElement('ul');
+    ul.className = 'card-list';
+    for (const [t, s] of items) {
+      const li = document.createElement('li');
+      li.className = 'lot-card';
+      const strong = document.createElement('strong');
+      strong.textContent = t;
+      const span = document.createElement('span');
+      span.textContent = s;
+      li.append(strong, span);
+      ul.append(li);
+    }
+    frag.append(ul);
+    return frag;
+  }
+
+  document.getElementById('btn-print')?.addEventListener('click', () => window.print());
+  document.getElementById('btn-json')?.addEventListener('click', () => {
+    const found = getLot(id);
+    if (!found) return;
+    const blob = new Blob(
+      [JSON.stringify({ lote: found, recepciones: listReceptions(id), analisis: listAnalyses(id) }, null, 2)],
+      { type: 'application/json' },
+    );
+    const aEl = document.createElement('a');
+    aEl.download = `ficha-${id}.json`;
+    aEl.href = URL.createObjectURL(blob);
+    aEl.click();
+    URL.revokeObjectURL(aEl.href);
+  });
+</script>
+
+<style>
+  .kind {
+    color: var(--muted);
+  }
+
+  .qr-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+  }
+
+  .qr-box canvas {
+    width: 160px;
+    height: 160px;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .hint {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .legal {
+    font-size: 13px;
+  }
+
+  .ficha {
+    margin: 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .ficha div {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--card);
+  }
+
+  .ficha div + div {
+    border-top: 1px solid var(--line);
+  }
+
+  .ficha dt {
+    color: var(--faint);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .ficha dd {
+    margin: 0;
+  }
+
+  @media (max-width: 520px) {
+    .ficha div {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+  }
+
+  .nav-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  @media print {
+    .nav-row,
+    .top,
+    .notice {
+      display: none;
+    }
+  }
+</style>

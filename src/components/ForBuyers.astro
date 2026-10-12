@@ -1,28 +1,25 @@
 ---
 import Check from './Check.astro';
 import SectionIntro from './SectionIntro.astro';
+import { content, type Lang } from '../lib/i18n';
 
-const points = [
-  'Which apiary and region the honey came from',
-  'When it was harvested, extracted and bottled',
-  'The lab analysis and readings the beekeeper attached',
-  'Whether the lot is verified, or still missing proof',
-];
+interface Props {
+  lang?: Lang;
+}
 
-const proofs = ['Lab analysis (PDF)', 'Moisture reading', '4 steps logged'];
+const { lang = 'es' } = Astro.props;
+const c = content[lang].buyers;
 ---
 
 <section id="for-buyers" aria-labelledby="buyers-title">
   <div class="copy">
-    <SectionIntro eyebrow="For buyers" id="buyers-title">
-      Check a jar before you trust the label.
+    <SectionIntro eyebrow={c.eyebrow} id="buyers-title">
+      {c.title}
     </SectionIntro>
-    <p class="lede">
-      Scan the code on the lid with your phone camera, or type it in. No app and no account.
-    </p>
+    <p class="lede">{c.lede}</p>
     <ul>
       {
-        points.map((point) => (
+        c.points.map((point) => (
           <li>
             <Check />
             <span>{point}</span>
@@ -30,26 +27,23 @@ const proofs = ['Lab analysis (PDF)', 'Moisture reading', '4 steps logged'];
         ))
       }
     </ul>
-    <p class="note">
-      Buying for a shop or a co-op? Ask your suppliers to register their lots and every delivery
-      arrives with its record.
-    </p>
+    <p class="note">{c.note}</p>
   </div>
 
   <div class="lookup">
-    <label for="lot-code">Check a lot code</label>
+    <label for="lot-code">{c.lookupLabel}</label>
     <div class="field">
       <input id="lot-code" name="lot" placeholder="BT-26-0412" autocomplete="off" spellcheck="false" />
-      <button type="button">Check</button>
+      <button type="button">{c.check}</button>
     </div>
     <div class="result" aria-label="Sample result">
       <div class="result-top">
         <span class="lot">LOT BT-26-0412</span>
-        <span class="verified">Verified</span>
+        <span class="verified">{content[lang].hero.verified}</span>
       </div>
-      <p>Rosemary honey from [Apiary name], [Region]. Harvested 14 Jun 2026, bottled 05 Jul 2026.</p>
+      <p>{c.sampleText}</p>
       <ul class="proofs">
-        {proofs.map((proof) => <li>{proof}</li>)}
+        {c.proofs.map((proof) => <li>{proof}</li>)}
       </ul>
     </div>
   </div>
