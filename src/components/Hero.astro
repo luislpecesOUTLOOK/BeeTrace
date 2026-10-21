@@ -15,12 +15,15 @@ const lot = {
   fields: c.fields,
   steps: c.steps,
 };
+
+// Long statement headlines need a smaller scale to stay readable.
+const longHeadline = (c.titleA + c.titleB).length > 55;
 ---
 
 <section class="hero" aria-labelledby="hero-title">
   <div class="copy">
     <p class="eyebrow">{c.eyebrow}</p>
-    <h1 id="hero-title">{c.titleA} <span>{c.titleB}</span>.</h1>
+    <h1 id="hero-title" class:list={[{ long: longHeadline }]}>{c.titleA} <span>{c.titleB}</span></h1>
     <p class="lede">{c.lede}</p>
     <div class="actions">
       <a class="primary" href={`${p}/app/?rol=apicultor`}>
@@ -77,6 +80,11 @@ const lot = {
 
   h1 span {
     color: var(--accent);
+  }
+
+  h1.long {
+    font-size: clamp(34px, 4.2vw, 62px);
+    line-height: 1.04;
   }
 
   .lede {

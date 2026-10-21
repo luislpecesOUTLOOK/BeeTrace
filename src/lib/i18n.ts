@@ -30,9 +30,9 @@ export function docLang(): Lang {
 
 const es = {
   meta: {
-    title: 'BeeTrace — Cada tarro, con historia hasta la colmena',
+    title: 'BeeTrace — Protege el margen y la reputación de marca',
     description:
-      'Trazabilidad por lotes para apicultores: registra cada cosecha como un lote, adjunta lo que lo demuestra y entrega a los compradores un código que se comprueba en segundos.',
+      'Trazabilidad verificable para la cadena apícola: registra cada cosecha como un lote, adjunta las pruebas y documenta recepciones, mezclas y análisis en un expediente común.',
   },
   nav: [
     { label: 'Cómo funciona', href: '#how-it-works' },
@@ -41,14 +41,14 @@ const es = {
   ],
   header: { login: 'Entrar', langName: 'Español' },
   hero: {
-    eyebrow: 'Trazabilidad por lotes para apicultores',
-    titleA: 'Cada tarro, con historia hasta la',
-    titleB: 'colmena',
+    eyebrow: 'Trazabilidad por lotes para apicultores y envasadoras',
+    titleA: 'Protege el margen y la reputación de marca',
+    titleB: 'eliminando el riesgo de lotes defectuosos y fraude en origen.',
     lede:
-      'Registra cada cosecha como un lote, adjunta lo que lo demuestra y entrega a los compradores un código que se comprueba en segundos. Tu miel conserva su historia hasta el lineal.',
+      'Registra cada cosecha como un lote, adjunta lo que lo demuestra y entrega a la envasadora un expediente que puede verificar en segundos. Sin fraude en origen ni lotes bloqueados en cuarentena.',
     primary: 'Registra tu primer lote',
     secondary: 'Ver un lote verificado',
-    journey: ['Colmenar', 'Cosecha', 'Extracción', 'Tarro', 'Comprador'],
+    journey: ['Colmenar', 'Cosecha', 'Extracción', 'Bidón', 'Envasadora'],
     lot: 'BT-26-0412',
     fields: [
       { label: 'Colmenar', value: '[Nombre del colmenar]' },
@@ -152,7 +152,7 @@ const es = {
   },
   cta: {
     title: 'Dale un registro a tu próxima cosecha.',
-    body: 'Registra un lote en unos minutos. Los compradores pueden comprobarlo en cuanto se guarda.',
+    body: 'Registra un lote en unos minutos. La envasadora puede verificar el expediente en cuanto se guarda.',
     action: 'Registra tu primer lote',
   },
   footer: { rights: '© 2026 BeeTrace' },
@@ -326,9 +326,9 @@ export const content: Record<Lang, Dict> = {
   es,
   en: {
     meta: {
-      title: 'BeeTrace — Every jar, traced back to the hive',
+      title: 'BeeTrace — Protect your margin and brand reputation',
       description:
-        'Lot traceability for beekeepers: log each harvest as a lot, attach what proves it, and hand buyers a code they can check in seconds.',
+        'Verifiable traceability for the beekeeping supply chain: log each harvest as a lot, attach the proof, and document receptions, blends and analyses in one shared record.',
     },
     nav: [
       { label: 'How it works', href: '#how-it-works' },
@@ -337,14 +337,14 @@ export const content: Record<Lang, Dict> = {
     ],
     header: { login: 'Sign in', langName: 'English' },
     hero: {
-      eyebrow: 'Lot traceability for beekeepers',
-      titleA: 'Every jar, traced back to the',
-      titleB: 'hive',
+      eyebrow: 'Lot traceability for beekeepers and packers',
+      titleA: 'Protect your margin and brand reputation',
+      titleB: 'by eliminating defective lots and origin fraud.',
       lede:
-        'Log each harvest as a lot, attach what proves it, and hand buyers a code they can check in seconds. Your honey keeps its story all the way to the shelf.',
+        'Log each harvest as a lot, attach what proves it, and hand the packer a record they can verify in seconds. No origin fraud, no lots stuck in quarantine.',
       primary: 'Register your first lot',
       secondary: 'See a verified lot',
-      journey: ['Apiary', 'Harvest', 'Extraction', 'Jar', 'Buyer'],
+      journey: ['Apiary', 'Harvest', 'Extraction', 'Drum', 'Packer'],
       lot: 'BT-26-0412',
       fields: [
         { label: 'Apiary', value: '[Apiary name]' },
@@ -448,7 +448,7 @@ export const content: Record<Lang, Dict> = {
     },
     cta: {
       title: 'Give your next harvest a record.',
-      body: 'Register a lot in a few minutes. Buyers can check it as soon as it is saved.',
+      body: 'Register a lot in a few minutes. The packer can verify the record as soon as it is saved.',
       action: 'Register your first lot',
     },
     footer: { rights: '© 2026 BeeTrace' },
