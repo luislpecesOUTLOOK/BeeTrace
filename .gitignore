@@ -3,7 +3,12 @@ dist/
 .astro/
 .DS_Store
 
-# Local media / working files
+# Local media / working files (never commit: these can be GB-sized)
 *.mp3
+*.MP3
 *.m4a
+*.M4A
+*.mp4
+*.MP4
 *.mov
+*.MOV
